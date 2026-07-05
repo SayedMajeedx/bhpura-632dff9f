@@ -924,7 +924,7 @@ function InvoicePreview({ order, items, settings, shippingAddress, paymentBadge 
           </div>
 
           {order.customers && (
-            <div className="mb-8" style={{ textAlign: isRTL ? "end" : "start" }}>
+            <div className="mb-8" style={{ textAlign: "start" }}>
               <p className="text-xs uppercase tracking-wider mb-1" style={{ opacity: 0.6 }}>{L.billTo}</p>
               <p className="font-medium">{order.customers.name}</p>
               {order.customers.phone && <p className="text-sm" style={{ opacity: 0.75 }}>{num(order.customers.phone)}</p>}
