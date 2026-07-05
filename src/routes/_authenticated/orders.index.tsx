@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, ReceiptText, Trash2 } from "lucide-react";
+import { Link as LinkIcon, Plus, ReceiptText, Trash2 } from "lucide-react";
 import { formatMoney } from "@/lib/format";
 import { toast } from "sonner";
 import { useT } from "@/lib/i18n";
@@ -11,6 +11,28 @@ import { useT } from "@/lib/i18n";
 export const Route = createFileRoute("/_authenticated/orders/")({
   component: OrdersList,
 });
+
+async function copyInvoiceLink(id: string, t: (k: string) => string) {
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  const url = `${origin}/invoice/${id}`;
+  try {
+    if (navigator?.clipboard?.writeText) {
+      await navigator.clipboard.writeText(url);
+    } else {
+      const ta = document.createElement("textarea");
+      ta.value = url;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+    }
+    toast.success(t("orders.linkCopied"));
+  } catch {
+    toast.error(t("orders.linkFailed"));
+  }
+}
 
 function OrdersList() {
   const t = useT();
@@ -53,12 +75,12 @@ function OrdersList() {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-4xl font-display">{t("orders.title")}</h1>
-          <p className="text-muted-foreground mt-1">{t("orders.subtitle")}</p>
+      <div className="mb-6 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+        <div className="min-w-0">
+          <h1 className="truncate text-3xl sm:text-4xl font-display">{t("orders.title")}</h1>
+          <p className="text-sm text-muted-foreground mt-1 truncate">{t("orders.subtitle")}</p>
         </div>
-        <Button onClick={create}><Plus className="h-4 w-4 mr-2" /> {t("orders.new")}</Button>
+        <Button onClick={create} className="shrink-0"><Plus className="h-4 w-4 mr-2" /> {t("orders.new")}</Button>
       </div>
 
       {(data ?? []).length === 0 ? (
@@ -69,7 +91,7 @@ function OrdersList() {
       ) : (
         <Card className="overflow-hidden">
           <div className="overflow-x-auto">
-          <table className="w-full min-w-[640px] text-sm">
+          <table className="w-full min-w-[720px] text-sm">
             <thead className="bg-secondary/50">
               <tr className="text-left">
                 <th className="p-4 font-medium">{t("orders.invoice")}</th>
@@ -77,7 +99,7 @@ function OrdersList() {
                 <th className="p-4 font-medium">{t("orders.customer")}</th>
                 <th className="p-4 font-medium">{t("orders.status")}</th>
                 <th className="p-4 font-medium text-right">{t("orders.total")}</th>
-                <th className="p-4"></th>
+                <th className="p-4 text-right">{t("orders.actions")}</th>
               </tr>
             </thead>
             <tbody>
@@ -91,8 +113,17 @@ function OrdersList() {
                   <td className="p-4 text-muted-foreground">{new Date(o.order_date).toLocaleDateString()}</td>
                   <td className="p-4">{o.customers?.name ?? <span className="text-muted-foreground italic">{t("orders.noCustomer")}</span>}</td>
                   <td className="p-4"><span className="text-xs uppercase tracking-wider px-2 py-1 rounded bg-secondary">{t(`status.${o.status}`)}</span></td>
-                  <td className="p-4 text-right font-medium">{formatMoney(Number(o.total), o.currency)}</td>
-                  <td className="p-4 text-right">
+                  <td className="p-4 text-right font-medium whitespace-nowrap">{formatMoney(Number(o.total), o.currency)}</td>
+                  <td className="p-4 text-right whitespace-nowrap">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      title={t("orders.copyLink")}
+                      aria-label={t("orders.copyLink")}
+                      onClick={() => copyInvoiceLink(o.id, t)}
+                    >
+                      <LinkIcon className="h-4 w-4" />
+                    </Button>
                     <Button variant="ghost" size="icon" onClick={() => del(o.id)}><Trash2 className="h-4 w-4" /></Button>
                   </td>
                 </tr>

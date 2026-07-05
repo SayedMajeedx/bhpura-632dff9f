@@ -1,63 +1,127 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
-import { Package, Users, ReceiptText, TrendingUp } from "lucide-react";
+import { Package, Users, ReceiptText, TrendingUp, CalendarDays, Trophy } from "lucide-react";
 import { formatMoney } from "@/lib/format";
-import { useT } from "@/lib/i18n";
+import { useI18n, useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
 });
 
+function startOfMonthISO() {
+  const d = new Date();
+  return new Date(d.getFullYear(), d.getMonth(), 1).toISOString();
+}
+function startOfTodayISO() {
+  const d = new Date();
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate()).toISOString();
+}
+
 function Dashboard() {
   const t = useT();
+  const { lang } = useI18n();
+  const locale = lang === "ar" ? "ar-BH" : "en-US";
+
   const { data } = useQuery({
     queryKey: ["dashboard-stats"],
     queryFn: async () => {
-      const [products, customers, orders, variants] = await Promise.all([
+      const [products, customers, orders, variants, items] = await Promise.all([
         supabase.from("products").select("id", { count: "exact", head: true }),
         supabase.from("customers").select("id", { count: "exact", head: true }),
-        supabase.from("orders").select("total, currency, status, created_at").order("created_at", { ascending: false }),
+        supabase
+          .from("orders")
+          .select("total, currency, status, created_at, order_date, invoice_number, id, customers(name)")
+          .order("created_at", { ascending: false }),
         supabase.from("product_variants").select("stock"),
+        supabase.from("order_items").select("description, quantity"),
       ]);
-      const revenue = (orders.data ?? []).reduce((s, o) => s + Number(o.total), 0);
-      const currency = orders.data?.[0]?.currency ?? "SAR";
-      const stock = (variants.data ?? []).reduce((s, v) => s + (v.stock ?? 0), 0);
+
+      const monthStart = startOfMonthISO();
+      const todayStart = startOfTodayISO();
+
+      const allOrders = (orders.data ?? []) as any[];
+      const currency = allOrders[0]?.currency ?? "SAR";
+
+      const revenueMonth = allOrders
+        .filter((o) => new Date(o.created_at).toISOString() >= monthStart)
+        .reduce((s, o) => s + Number(o.total || 0), 0);
+
+      const ordersToday = allOrders.filter(
+        (o) => new Date(o.created_at).toISOString() >= todayStart,
+      ).length;
+
+      const totalRevenue = allOrders.reduce((s, o) => s + Number(o.total || 0), 0);
+
+      const stock = (variants.data ?? []).reduce((s: number, v: any) => s + (v.stock ?? 0), 0);
+
+      const tallies = new Map<string, number>();
+      for (const it of (items.data ?? []) as any[]) {
+        const key = (it.description || "").trim() || "—";
+        tallies.set(key, (tallies.get(key) ?? 0) + Number(it.quantity || 0));
+      }
+      const topSelling = Array.from(tallies.entries())
+        .filter(([, q]) => q > 0)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 3)
+        .map(([description, quantity]) => ({ description, quantity }));
+
       return {
         products: products.count ?? 0,
         customers: customers.count ?? 0,
-        ordersCount: orders.data?.length ?? 0,
-        revenue, currency, stock,
-        recent: (orders.data ?? []).slice(0, 5),
+        ordersCount: allOrders.length,
+        revenue: totalRevenue,
+        revenueMonth,
+        ordersToday,
+        currency,
+        stock,
+        recent: allOrders.slice(0, 5),
+        topSelling,
       };
     },
   });
 
-  const stats = [
-    { label: t("dashboard.revenue"), value: data ? formatMoney(data.revenue, data.currency) : "—", icon: TrendingUp },
-    { label: t("dashboard.orders"), value: data?.ordersCount ?? "—", icon: ReceiptText },
-    { label: t("dashboard.customers"), value: data?.customers ?? "—", icon: Users },
-    { label: t("dashboard.unitsInStock"), value: data?.stock ?? "—", icon: Package },
+  const primary = [
+    {
+      label: t("dashboard.revenueMonth"),
+      value: data ? formatMoney(data.revenueMonth, data.currency, locale) : "—",
+      icon: TrendingUp,
+    },
+    {
+      label: t("dashboard.ordersToday"),
+      value: data ? String(data.ordersToday) : "—",
+      icon: CalendarDays,
+    },
+    {
+      label: t("dashboard.customers"),
+      value: data ? String(data.customers) : "—",
+      icon: Users,
+    },
+    {
+      label: t("dashboard.unitsInStock"),
+      value: data ? String(data.stock) : "—",
+      icon: Package,
+    },
   ];
 
   return (
-    <div className="p-8 max-w-7xl">
-      <div className="mb-8">
-        <h1 className="text-4xl font-display">{t("dashboard.title")}</h1>
+    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-3xl sm:text-4xl font-display">{t("dashboard.title")}</h1>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {stats.map((s) => {
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
+        {primary.map((s) => {
           const Icon = s.icon;
           return (
-            <Card key={s.label} className="p-6">
-              <div className="flex items-start justify-between">
-                <div>
+            <Card key={s.label} className="p-5 sm:p-6">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
                   <p className="text-xs uppercase tracking-wider text-muted-foreground">{s.label}</p>
-                  <p className="text-3xl font-display mt-2">{s.value}</p>
+                  <p className="text-2xl sm:text-3xl font-display mt-2 truncate">{s.value}</p>
                 </div>
-                <div className="h-10 w-10 rounded-full bg-secondary flex items-center justify-center">
+                <div className="h-10 w-10 shrink-0 rounded-full bg-secondary flex items-center justify-center">
                   <Icon className="h-5 w-5 text-primary" />
                 </div>
               </div>
@@ -66,23 +130,68 @@ function Dashboard() {
         })}
       </div>
 
-      <Card className="p-6">
-        <h2 className="text-xl font-display mb-4">{t("dashboard.recentOrders")}</h2>
-        {(data?.recent ?? []).length === 0 ? (
-          <p className="text-sm text-muted-foreground">{t("dashboard.noOrders")}</p>
-        ) : (
-          <ul className="divide-y divide-border">
-            {data!.recent.map((o: any, i: number) => (
-              <li key={i} className="py-3 flex justify-between items-center text-sm">
-                <span className="text-muted-foreground">
-                  {new Date(o.created_at).toLocaleDateString()} · {t(`status.${o.status}`)}
-                </span>
-                <span className="font-medium">{formatMoney(Number(o.total), o.currency)}</span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Card>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        <Card className="p-5 sm:p-6">
+          <div className="flex items-center gap-2 mb-1">
+            <Trophy className="h-4 w-4 text-primary" />
+            <h2 className="text-lg sm:text-xl font-display">{t("dashboard.topSelling")}</h2>
+          </div>
+          <p className="text-xs text-muted-foreground mb-4">{t("dashboard.topSellingSubtitle")}</p>
+          {(data?.topSelling ?? []).length === 0 ? (
+            <p className="text-sm text-muted-foreground">{t("dashboard.noTopSelling")}</p>
+          ) : (
+            <ul className="space-y-3">
+              {data!.topSelling.map((row, i) => {
+                const max = data!.topSelling[0]!.quantity || 1;
+                const pct = Math.max(6, Math.round((row.quantity / max) * 100));
+                return (
+                  <li key={i}>
+                    <div className="flex items-center justify-between gap-3 mb-1">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-medium">
+                          {i + 1}
+                        </span>
+                        <span className="truncate text-sm font-medium">{row.description}</span>
+                      </div>
+                      <span className="shrink-0 text-xs text-muted-foreground">
+                        {row.quantity} {t("dashboard.unitsSold")}
+                      </span>
+                    </div>
+                    <div className="h-1.5 rounded-full bg-secondary overflow-hidden">
+                      <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${pct}%` }} />
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </Card>
+
+        <Card className="p-5 sm:p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <ReceiptText className="h-4 w-4 text-primary" />
+            <h2 className="text-lg sm:text-xl font-display">{t("dashboard.recentOrders")}</h2>
+          </div>
+          {(data?.recent ?? []).length === 0 ? (
+            <p className="text-sm text-muted-foreground">{t("dashboard.noOrders")}</p>
+          ) : (
+            <ul className="divide-y divide-border">
+              {data!.recent.map((o: any) => (
+                <li key={o.id} className="py-3 flex items-center justify-between gap-3 text-sm">
+                  <Link to="/orders/$id" params={{ id: o.id }} className="min-w-0 truncate">
+                    <span className="text-primary font-medium">#{o.invoice_number}</span>
+                    <span className="text-muted-foreground"> · {new Date(o.created_at).toLocaleDateString(locale)}</span>
+                    {o.customers?.name && (
+                      <span className="text-muted-foreground"> · {o.customers.name}</span>
+                    )}
+                  </Link>
+                  <span className="shrink-0 font-medium">{formatMoney(Number(o.total), o.currency, locale)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Card>
+      </div>
     </div>
   );
 }
