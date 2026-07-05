@@ -980,7 +980,20 @@ function InvoicePreview({ order, items, settings, shippingAddress, paymentBadge 
                 {items.map((it, i) => (
                   <tr key={i} className="border-b border-neutral-200 align-top">
                     <td className="p-3 text-start">
-                      <p className="font-medium">{it.description || "—"}</p>
+                      {(() => {
+                        const raw = (it.description || "—").split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
+                        const [head, ...rest] = raw.length ? raw : ["—"];
+                        return (
+                          <>
+                            <p className="font-medium">{head}</p>
+                            {rest.length > 0 && (
+                              <div className="text-xs mt-0.5 leading-snug" style={{ opacity: 0.7 }}>
+                                {rest.map((line, li) => (<div key={li}>{line}</div>))}
+                              </div>
+                            )}
+                          </>
+                        );
+                      })()}
                       {it.customizations.length > 0 && (
                         <ul className="mt-1 text-xs space-y-0.5" style={{ opacity: 0.75 }}>
                           {it.customizations.map((c, ci) => (
