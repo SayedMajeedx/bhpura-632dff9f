@@ -599,7 +599,7 @@ function SendInvoiceDialog({ order, totals, settings, currency }: { order: any; 
     customer_name: order?.customers?.name ?? "there",
     customer_email: order?.customers?.email ?? "",
     customer_phone: order?.customers?.phone ?? "",
-    business_name: settings?.business_name ?? "",
+    business_name: brandFor("en", settings?.business_name),
     invoice_number: String(order?.invoice_number ?? ""),
     date: new Date(order?.order_date).toLocaleDateString(),
     total: formatMoney(totals.total, currency),
