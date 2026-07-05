@@ -119,18 +119,7 @@ function PublicInvoice() {
 
   return (
     <div dir={isRTL ? "rtl" : "ltr"} lang={lang} className="min-h-screen bg-neutral-100 py-6 px-3 sm:py-10 sm:px-6">
-      <style>{`
-        @media print {
-          @page { margin: 12mm; }
-          html, body { background: #fff !important; }
-          .invoice-card { box-shadow: none !important; border: 0 !important; background: #fff !important; }
-          .invoice-card, .invoice-card p, .invoice-card span, .invoice-card td,
-          .invoice-card th, .invoice-card li, .invoice-card h1, .invoice-card h2,
-          .invoice-card h3, .invoice-card strong, .invoice-card em { color: #000 !important; }
-          .invoice-card thead th { color: #ffffff !important; }
-          .invoice-card * { print-color-adjust: exact !important; -webkit-print-color-adjust: exact !important; }
-        }
-      `}</style>
+      {/* Browser print overrides removed — PDF is generated via html2pdf directly from the live DOM. */}
       <div className="mx-auto max-w-3xl">
         <div className="print:hidden mb-4 flex flex-wrap items-center justify-end gap-2">
           <div className="inline-flex rounded-md border border-neutral-300 bg-white overflow-hidden text-xs">
@@ -138,7 +127,11 @@ function PublicInvoice() {
             <button onClick={() => setLang("ar")} className={`px-3 py-1 ${lang === "ar" ? "bg-neutral-900 text-white" : ""}`}>العربية</button>
           </div>
           <button
-            onClick={() => window.print()}
+            onClick={async () => {
+              const el = document.querySelector<HTMLElement>(".invoice-card");
+              const { downloadInvoicePdf } = await import("@/lib/download-invoice-pdf");
+              await downloadInvoicePdf(el, `invoice-${order.invoice_number ?? order.id}`);
+            }}
             className="px-3 py-1 text-xs rounded-md border border-neutral-300 bg-white hover:bg-neutral-50"
           >
             {L.print}
