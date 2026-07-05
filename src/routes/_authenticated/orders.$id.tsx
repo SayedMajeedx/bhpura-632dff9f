@@ -219,15 +219,45 @@ function OrderDetail() {
       {/* Editor - hidden on print */}
       <div className="no-print space-y-4 mb-8">
         <Card className="p-6">
+          <div className="mb-4">
+            <Label className="flex items-center gap-2"><Search className="h-3 w-3" /> {t("customers.searchByPhone")}</Label>
+            <Input
+              className="text-start"
+              placeholder={t("customers.searchByPhonePh")}
+              value={phoneSearch}
+              onChange={(e) => {
+                const q = e.target.value;
+                setPhoneSearch(q);
+                const digits = q.replace(/\D/g, "");
+                if (digits.length < 3) return;
+                const match = (customersQ.data ?? []).find((c: any) =>
+                  (c.phone ?? "").replace(/\D/g, "").includes(digits),
+                );
+                if (match) {
+                  const def = (addressesQ.data ?? []).find((a) => a.customer_id === match.id && a.is_default)
+                    ?? (addressesQ.data ?? []).find((a) => a.customer_id === match.id);
+                  setOrder({ ...order, customer_id: match.id, shipping_address_id: def?.id ?? null });
+                }
+              }}
+            />
+            {phoneSearch.replace(/\D/g, "").length >= 3 && !(customersQ.data ?? []).some((c: any) => (c.phone ?? "").replace(/\D/g, "").includes(phoneSearch.replace(/\D/g, ""))) && (
+              <p className="text-xs text-muted-foreground mt-1 italic">{t("customers.noMatch")}</p>
+            )}
+          </div>
           <div className="grid grid-cols-3 gap-4">
             <div>
               <Label>Customer</Label>
-              <Select value={order.customer_id ?? "none"} onValueChange={(v) => setOrder({ ...order, customer_id: v === "none" ? null : v })}>
+              <Select value={order.customer_id ?? "none"} onValueChange={(v) => {
+                const cid = v === "none" ? null : v;
+                const def = cid ? (addressesQ.data ?? []).find((a) => a.customer_id === cid && a.is_default)
+                  ?? (addressesQ.data ?? []).find((a) => a.customer_id === cid) : null;
+                setOrder({ ...order, customer_id: cid, shipping_address_id: def?.id ?? null });
+              }}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">— No customer —</SelectItem>
                   {(customersQ.data ?? []).map((c: any) => (
-                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                    <SelectItem key={c.id} value={c.id}>{c.name}{c.phone ? ` — ${c.phone}` : ""}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -254,15 +284,48 @@ function OrderDetail() {
           {order.customer_id && (() => {
             const selected = (customersQ.data ?? []).find((c: any) => c.id === order.customer_id);
             if (!selected) return null;
-            const lines = formatDeliveryAddress(selected, lang);
+            const customerAddrs = (addressesQ.data ?? []).filter((a) => a.customer_id === order.customer_id);
+            const defaultAddr = customerAddrs.find((a) => a.is_default);
+            const activeId = order.shipping_address_id ?? defaultAddr?.id ?? null;
+            const active = customerAddrs.find((a) => a.id === activeId) ?? null;
+            const legacyLines = formatDeliveryAddress(selected, lang);
             return (
               <div className="mt-4 pt-4 border-t border-border text-start">
                 <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">{t("orderDetail.deliveryAddress")}</p>
                 <p className="font-medium">{selected.name}</p>
-                {lines.length > 0
-                  ? lines.map((l, i) => <p key={i} className="text-sm text-muted-foreground">{l}</p>)
-                  : <p className="text-sm text-muted-foreground italic">{t("orderDetail.noDeliveryAddress")}</p>}
                 {selected.phone && <p className="text-sm text-muted-foreground">{selected.phone}</p>}
+                {customerAddrs.length > 0 ? (
+                  <div className="mt-3 space-y-2">
+                    <Label className="text-xs">{t("orderDetail.chooseAddress")}</Label>
+                    <Select
+                      value={activeId ?? ""}
+                      onValueChange={(v) => setOrder({ ...order, shipping_address_id: v })}
+                    >
+                      <SelectTrigger className="text-start"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {customerAddrs.map((a) => (
+                          <SelectItem key={a.id} value={a.id}>
+                            {(a.label || t("customers.address"))}{a.is_default ? ` ★` : ""} — {formatAddressLine(a as StructuredAddress, lang) || "—"}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {active && (
+                      <p className="text-sm text-muted-foreground">
+                        {formatAddressLine(active as StructuredAddress, lang) || "—"}
+                        {active.is_default && (
+                          <span className="ms-2 inline-flex items-center gap-1 text-xs text-primary">
+                            <Star className="h-3 w-3" /> {t("customers.default")}
+                          </span>
+                        )}
+                      </p>
+                    )}
+                  </div>
+                ) : legacyLines.length > 0 ? (
+                  legacyLines.map((l, i) => <p key={i} className="text-sm text-muted-foreground">{l}</p>)
+                ) : (
+                  <p className="text-sm text-muted-foreground italic">{t("orderDetail.noDeliveryAddress")}</p>
+                )}
               </div>
             );
           })()}
