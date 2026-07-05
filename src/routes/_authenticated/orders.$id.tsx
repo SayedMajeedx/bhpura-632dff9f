@@ -350,7 +350,10 @@ function InvoicePreview({ order, items, settings }: { order: any; items: Item[];
   const bg = settings.background_color || "#ffffff";
   const text = settings.text_color || "#1a1a1a";
   const fontSize = Number(settings.font_size) || 14;
-  const defaultLogoSize = Number(settings.logo_size) || 64;
+  const logoX = Number(settings.logo_x) || 0;
+  const logoY = Number(settings.logo_y) || 0;
+  const logoW = Number(settings.logo_width) || 160;
+  const logoH = Number(settings.logo_height) || 64;
 
   const [invoiceLang, setInvoiceLang] = useState<"en" | "ar">("en");
   const L = INVOICE_LABELS[invoiceLang];
@@ -362,28 +365,10 @@ function InvoicePreview({ order, items, settings }: { order: any; items: Item[];
       ? "'InvoiceCustomFont', sans-serif"
       : `"${settings.font_family || "Cormorant Garamond"}", serif`;
 
-  // Draggable / resizable logo state
-  const [logoBox, setLogoBox] = useState({
-    x: 0,
-    y: 0,
-    width: Math.max(defaultLogoSize * 2, 120),
-    height: defaultLogoSize,
-  });
-  useEffect(() => {
-    setLogoBox((b) => ({ ...b, height: defaultLogoSize, width: Math.max(defaultLogoSize * 2, 120) }));
-  }, [defaultLogoSize]);
-  const resetLogo = () =>
-    setLogoBox({ x: 0, y: 0, width: Math.max(defaultLogoSize * 2, 120), height: defaultLogoSize });
-
   return (
     <div className="space-y-2">
       {/* Invoice controls (not printed) */}
       <div className="print:hidden flex flex-wrap items-center justify-end gap-2">
-        {settings.logo_url && (
-          <Button type="button" variant="ghost" size="sm" onClick={resetLogo}>
-            {L.resetLogo}
-          </Button>
-        )}
         <Label className="text-xs text-muted-foreground">{L.language}:</Label>
         <div className="inline-flex rounded-md border border-input overflow-hidden">
           <button
