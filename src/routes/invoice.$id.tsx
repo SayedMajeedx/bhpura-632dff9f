@@ -50,14 +50,14 @@ const LABELS = {
   en: {
     invoice: "INVOICE", number: "Invoice #", date: "Date", status: "Status",
     billTo: "Bill to", delivery: "Delivery address", payment: "Payment method", vatId: "VAT",
-    desc: "Description", qty: "Qty", unit: "Unit", total: "Total",
+    desc: "Description", qty: "Qty", unit: "Unit", total: "Total", size: "Size", color: "Color",
     subtotal: "Subtotal", discount: "Discount", vat: "VAT", shipping: "Shipping", grandTotal: "Grand Total",
     notes: "Notes", print: "Print", switchAr: "العربية", switchEn: "English",
   },
   ar: {
     invoice: "فاتورة", number: "رقم الفاتورة", date: "التاريخ", status: "الحالة",
     billTo: "فاتورة إلى", delivery: "عنوان التوصيل", payment: "طريقة الدفع", vatId: "الرقم الضريبي",
-    desc: "الوصف", qty: "الكمية", unit: "سعر الوحدة", total: "الإجمالي",
+    desc: "الوصف", qty: "الكمية", unit: "سعر الوحدة", total: "الإجمالي", size: "المقاس", color: "اللون",
     subtotal: "المجموع الفرعي", discount: "الخصم", vat: "ضريبة القيمة المضافة", shipping: "الشحن", grandTotal: "الإجمالي الكلي",
     notes: "ملاحظات", print: "طباعة", switchAr: "العربية", switchEn: "English",
   },
@@ -213,7 +213,19 @@ function PublicInvoice() {
                   {items.map((it: any, i: number) => (
                     <tr key={i} className="border-b border-neutral-200 align-top">
                       <td className="p-3">
-                        <p className="font-medium">{it.description || "—"}</p>
+                        {it.products?.name || it.product_variants ? (
+                          <div className="space-y-0.5">
+                            <p className="font-medium">{it.products?.name || it.description || "—"}</p>
+                            {it.product_variants?.size && (
+                              <p className="text-xs" style={{ opacity: 0.75 }}>{L.size}: {it.product_variants.size}</p>
+                            )}
+                            {it.product_variants?.color && (
+                              <p className="text-xs" style={{ opacity: 0.75 }}>{L.color}: {it.product_variants.color}</p>
+                            )}
+                          </div>
+                        ) : (
+                          <p className="font-medium">{it.description || "—"}</p>
+                        )}
                         {(it.customizations ?? []).length > 0 && (
                           <ul className="mt-1 text-xs space-y-0.5" style={{ opacity: 0.75 }}>
                             {it.customizations.map((c: any, ci: number) => (

@@ -10,7 +10,7 @@ export const getPublicInvoice = createServerFn({ method: "GET" })
 
     const { data: order, error } = await supabaseAdmin
       .from("orders")
-      .select("*, customers(name, phone, email), order_items(*)")
+      .select("*, customers(name, phone, email), order_items(*, products(name), product_variants(size, color, fabric))")
       .eq("id", data.id)
       .maybeSingle();
     if (error) throw new Error(error.message);
