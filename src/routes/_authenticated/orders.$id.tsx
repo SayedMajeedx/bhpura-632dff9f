@@ -17,6 +17,8 @@ import { useT, useI18n } from "@/lib/i18n";
 import { regionLabel, formatAddressLine, formatAddressDetailed, type StructuredAddress } from "@/lib/bahrain-regions";
 import { printThermalReceipt } from "@/lib/thermal-print";
 import { resolvePaymentStatus, PAYMENT_BADGE_CLASSES, PAYMENT_BADGE_LABEL, PAYMENT_BADGE_VALUES, type PaymentBadge } from "@/lib/payment-status";
+import { logActivityBatch } from "@/lib/activity-log";
+import { ActivityLogList } from "@/components/activity-log-list";
 
 function formatDeliveryAddress(
   c: { region?: string | null; road?: string | null; house?: string | null; flat?: string | null; address?: string | null; city?: string | null } | null | undefined,
@@ -225,6 +227,38 @@ function OrderDetail() {
     } as any).eq("id", order.id);
     if (oe) return toast.error(oe.message);
 
+    // ── Activity log: detect changes vs saved state
+    const prev = (orderQ.data ?? {}) as any;
+    const logs: Array<{ action: string; en: string; ar: string; order_id: string }> = [];
+    if (prev.status !== order.status) {
+      logs.push({
+        action: "status_change",
+        order_id: order.id,
+        en: `Order status changed from "${prev.status ?? "—"}" to "${order.status}"`,
+        ar: `تم تغيير حالة الطلب من "${prev.status ?? "—"}" إلى "${order.status}"`,
+      });
+    }
+    const prevPay = prev.payment_status ?? "unpaid";
+    const nextPay = order.payment_status ?? "unpaid";
+    if (prevPay !== nextPay) {
+      logs.push({
+        action: "payment_change",
+        order_id: order.id,
+        en: `Payment status manually changed from "${prevPay}" to "${nextPay}"`,
+        ar: `تم تغيير حالة الدفع يدوياً من "${prevPay}" إلى "${nextPay}"`,
+      });
+    }
+    const prevAdvance = Number(prev.advance_paid ?? 0);
+    const nextAdvance = totals.advancePaid;
+    if (prevAdvance !== nextAdvance) {
+      logs.push({
+        action: "advance_change",
+        order_id: order.id,
+        en: `Advance payment updated from ${prevAdvance} to ${nextAdvance} ${currency}`,
+        ar: `تم تحديث المبلغ المقدم من ${prevAdvance} إلى ${nextAdvance} ${currency}`,
+      });
+    }
+
     await supabase.from("order_items").delete().eq("order_id", order.id);
     if (items.length > 0) {
       const { error: ie } = await supabase.from("order_items").insert(
@@ -251,10 +285,57 @@ function OrderDetail() {
       toast.success(t("orderDetail.stockUpdated"));
     }
 
+    // Stock deltas: compare prior deducted items vs current, log per-variant changes
+    if (!se) {
+      const variants = variantsQ.data ?? [];
+      const wasDeducted = !!(orderQ.data as any)?.stock_deducted;
+      const priorItems = wasDeducted ? ((orderQ.data as any)?.order_items ?? []) : [];
+      const nowDeducting = DEDUCTING.has(order.status);
+      const prevByV = new Map<string, number>();
+      for (const p of priorItems as any[]) {
+        if (!p.variant_id) continue;
+        prevByV.set(p.variant_id, (prevByV.get(p.variant_id) ?? 0) + Number(p.quantity));
+      }
+      const wantByV = new Map<string, number>();
+      if (nowDeducting) {
+        for (const it of items) {
+          if (!it.variant_id) continue;
+          wantByV.set(it.variant_id, (wantByV.get(it.variant_id) ?? 0) + Number(it.quantity));
+        }
+      }
+      const vids = new Set<string>([...prevByV.keys(), ...wantByV.keys()]);
+      for (const vid of vids) {
+        const delta = (wantByV.get(vid) ?? 0) - (prevByV.get(vid) ?? 0);
+        if (delta === 0) continue;
+        const v = variants.find((x: any) => x.id === vid) as any;
+        const p = v ? (productsQ.data ?? []).find((x: any) => x.id === v.product_id) : null;
+        const vLabel = v ? `${(p as any)?.name ?? ""}${v.size ? ` · ${v.size}` : ""}${v.color ? ` · ${v.color}` : ""}` : vid;
+        const before = Number(v?.stock ?? 0) + (prevByV.get(vid) ?? 0);
+        const after = before - (wantByV.get(vid) ?? 0);
+        const inv = order.invoice_number ?? "";
+        if (delta > 0) {
+          logs.push({
+            action: "stock_change", order_id: order.id,
+            en: `Stock decreased from ${before} to ${after} for ${vLabel} due to Order #${inv}`,
+            ar: `انخفض المخزون من ${before} إلى ${after} لـ ${vLabel} بسبب الطلب رقم ${inv}`,
+          } as any);
+        } else {
+          logs.push({
+            action: "stock_change", order_id: order.id,
+            en: `Stock restored from ${before} to ${after} for ${vLabel} due to Order #${inv}`,
+            ar: `استُعيد المخزون من ${before} إلى ${after} لـ ${vLabel} بسبب الطلب رقم ${inv}`,
+          } as any);
+        }
+      }
+    }
+
+    if (logs.length > 0) await logActivityBatch(logs);
+
     toast.success("Saved");
     qc.invalidateQueries({ queryKey: ["order", id] });
     qc.invalidateQueries({ queryKey: ["orders"] });
     qc.invalidateQueries({ queryKey: ["variants"] });
+    qc.invalidateQueries({ queryKey: ["activity_logs"] });
   };
 
 
@@ -642,6 +723,9 @@ function OrderDetail() {
       />
         );
       })()}
+      <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8 no-print">
+        <ActivityLogList orderId={order.id} scope="order" />
+      </div>
     </div>
   );
 }
