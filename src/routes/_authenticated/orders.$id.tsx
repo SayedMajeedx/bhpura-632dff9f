@@ -483,7 +483,7 @@ function InvoicePreview({ order, items, settings }: { order: any; items: Item[];
                   />
                 </div>
               )}
-              <h2 style={{ color, fontSize: `${fontSize * 1.75}px`, fontWeight: 600 }}>{settings.business_name}</h2>
+              <h2 style={{ color, fontSize: `${fontSize * 1.75}px`, fontWeight: 600 }}>{brandFor(invoiceLang, settings.business_name)}</h2>
               {settings.address && <p className="text-sm text-neutral-600 whitespace-pre-line mt-1">{settings.address}</p>}
               <p className="text-xs text-neutral-500 mt-1">
                 {[settings.phone, settings.email].filter(Boolean).join(" · ")}
