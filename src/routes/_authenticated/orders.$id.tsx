@@ -1142,7 +1142,12 @@ function SendInvoiceDialog({ order, totals, settings, currency }: { order: any; 
   const openWhatsApp = () => {
     const digits = (phone || "").replace(/[^\d]/g, "");
     if (!digits) return toast.error("This customer has no phone on file — add it in Customers or type one here (with country code)");
-    const url = `https://wa.me/${digits}?text=${encodeURIComponent(message)}`;
+    // Explicitly inject the live invoice link (same URL as the "Copy invoice link" button)
+    // into the {{Dynamic Invoice Link}} placeholder before encoding for WhatsApp.
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const invoiceLink = `${origin}/invoice/${order.id}`;
+    const finalMessage = message.replace(/\{\{\s*Dynamic Invoice Link\s*\}\}/g, invoiceLink);
+    const url = `https://wa.me/${digits}?text=${encodeURIComponent(finalMessage)}`;
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
