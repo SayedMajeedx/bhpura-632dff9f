@@ -87,9 +87,11 @@ function PublicInvoice() {
   const [lang, setLang] = useState<"en" | "ar">("en");
   const L = LABELS[lang];
   const isRTL = lang === "ar";
-  const locale = isRTL ? "ar-BH" : "en-US";
-  const currency = order.currency ?? "SAR";
+  const locale = isRTL ? "ar-BH" : "en-BH";
+  const currency = order.currency ?? "BHD";
   const color = settings?.primary_color || "#8b6f47";
+  const textColor = settings?.text_color || "#1a1a1a";
+  const bgColor = settings?.background_color || "#ffffff";
   const brand = settings?.business_name || (lang === "ar" ? "بيورا" : "Pura");
   const items = order.order_items ?? [];
 
