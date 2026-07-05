@@ -84,6 +84,7 @@ function Settings() {
       default_tax_rate: f.default_tax_rate, primary_color: f.primary_color, footer_note: f.footer_note,
       font_family: f.font_family, font_url: f.font_url, font_size: f.font_size,
       text_color: f.text_color, background_color: f.background_color, logo_size: f.logo_size,
+      logo_x: f.logo_x, logo_y: f.logo_y, logo_width: f.logo_width, logo_height: f.logo_height,
     }).eq("user_id", f.user_id);
     if (error) toast.error(error.message);
     else { toast.success("Saved"); qc.invalidateQueries({ queryKey: ["business-settings"] }); }
