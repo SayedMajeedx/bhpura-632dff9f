@@ -884,11 +884,11 @@ function InvoicePreview({ order, items, settings, shippingAddress, paymentBadge 
             Achieved with flex-row-reverse in both modes (LTR flex-row-reverse puts first child right; RTL flex-row-reverse puts first child left).
           */}
           <div className="flex flex-col md:flex-row-reverse justify-between items-start mb-8 md:mb-10 gap-4 md:gap-6 print:flex-row-reverse">
-            <div className="flex-1 min-w-0" style={{ textAlign: isRTL ? "start" : "end" }}>
+            <div className="flex-1 min-w-0" style={{ textAlign: "end" }}>
               {settings.logo_url && (
                 <div
                   className="relative mb-3 flex"
-                  style={{ height: logoH + logoY + 8, justifyContent: isRTL ? "flex-start" : "flex-end" }}
+                  style={{ height: logoH + logoY + 8, justifyContent: "flex-end" }}
                 >
                   <img
                     src={settings.logo_url}
@@ -912,7 +912,7 @@ function InvoicePreview({ order, items, settings, shippingAddress, paymentBadge 
                 {settings.vat_number && ` · ${L.vatLabel} ${num(settings.vat_number)}`}
               </p>
             </div>
-            <div className="w-full md:w-auto" style={{ textAlign: isRTL ? "end" : "start" }}>
+            <div className="w-full md:w-auto" style={{ textAlign: "start" }}>
               <h1 className="text-3xl sm:text-4xl font-display tracking-tight" style={{ color }}>{L.invoice}</h1>
               <p className="text-lg mt-1">{L.invoiceNumber}: {num(order.invoice_number)}</p>
               <p className="text-xs mt-2" style={{ opacity: 0.7 }}>{L.date}: {new Date(order.order_date).toLocaleDateString(isRTL ? "ar-BH" : undefined)}</p>
