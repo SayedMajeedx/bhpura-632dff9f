@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { Upload } from "lucide-react";
 import { useT } from "@/lib/i18n";
+import { Rnd } from "react-rnd";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   component: Settings,
@@ -24,7 +25,11 @@ type Settings = {
   footer_note: string | null; next_invoice_number: number;
   font_family: string; font_url: string | null; font_size: number;
   text_color: string; background_color: string; logo_size: number;
+  logo_x: number; logo_y: number; logo_width: number; logo_height: number;
 };
+
+const LOGO_CANVAS_W = 600;
+const LOGO_CANVAS_H = 220;
 
 const FONT_PRESETS = [
   "Cormorant Garamond", "Playfair Display", "Inter", "Roboto",
