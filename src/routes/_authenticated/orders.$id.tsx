@@ -568,15 +568,41 @@ function OrderDetail() {
               </div>
               <div><Label>{t("orderDetail.taxRate")}</Label>
                 <Input type="number" step="0.01" value={order.tax_rate} onChange={(e) => setOrder({ ...order, tax_rate: Number(e.target.value) })} /></div>
+              <div>
+                <Label>{t("orderDetail.advancePaid")}</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  min={0}
+                  value={order.advance_paid ?? 0}
+                  onChange={(e) => setOrder({ ...order, advance_paid: Number(e.target.value) })}
+                />
+              </div>
               <div className="border-t border-border pt-3 space-y-1 text-sm">
                 <Row label={t("orderDetail.subtotal")} value={formatMoney(totals.subtotal, currency)} />
                 <Row label={t("orderDetail.discount")} value={`− ${formatMoney(totals.discount, currency)}`} />
                 <Row label={`${t("orderDetail.vat")} (${order.tax_rate}%)`} value={formatMoney(totals.taxAmount, currency)} />
                 <Row label={t("orderDetail.shipping")} value={formatMoney(totals.shipping, currency)} />
-                <div className="flex justify-between pt-2 border-t border-border">
+                <div className="flex justify-between items-center pt-2 border-t border-border">
                   <span className="font-display text-lg">{t("orderDetail.total")}</span>
-                  <span className="font-display text-lg">{formatMoney(totals.total, currency)}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-display text-lg">{formatMoney(totals.total, currency)}</span>
+                    <span
+                      className={`text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full border ${PAYMENT_BADGE_CLASSES[paymentBadge]}`}
+                    >
+                      {t(`payStatus.${paymentBadge}`)}
+                    </span>
+                  </div>
                 </div>
+                {totals.advancePaid > 0 && (
+                  <>
+                    <Row label={t("orderDetail.advancePaid")} value={`− ${formatMoney(totals.advancePaid, currency)}`} />
+                    <div className="flex justify-between pt-1 font-medium">
+                      <span>{t("orderDetail.remaining")}</span>
+                      <span>{formatMoney(totals.remaining, currency)}</span>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -591,10 +617,11 @@ function OrderDetail() {
           ?? null;
         return (
       <InvoicePreview
-        order={{ ...order, subtotal: totals.subtotal, tax_amount: totals.taxAmount, total: totals.total }}
+        order={{ ...order, subtotal: totals.subtotal, tax_amount: totals.taxAmount, total: totals.total, advance_paid: totals.advancePaid }}
         items={items}
         settings={settingsQ.data}
         shippingAddress={chosen}
+        paymentBadge={paymentBadge}
       />
         );
       })()}
