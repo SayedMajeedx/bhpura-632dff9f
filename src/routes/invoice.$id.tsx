@@ -156,7 +156,7 @@ function PublicInvoice() {
                     src={settings.logo_url}
                     alt="logo"
                     className="h-14 object-contain mb-2"
-                    style={{ marginInlineStart: isRTL ? 0 : "auto" }}
+                    style={{ marginInlineStart: "auto" }}
                   />
                 )}
                 <h2 style={{ color }} className="text-2xl font-semibold">{brand}</h2>
