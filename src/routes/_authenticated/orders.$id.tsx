@@ -352,10 +352,10 @@ function OrderDetail() {
 
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-display text-lg">Line items</h3>
-            <Button size="sm" variant="outline" onClick={addItem}><Plus className="h-3 w-3 mr-1" /> Add line</Button>
+            <h3 className="font-display text-lg">{t("orderDetail.lineItems")}</h3>
+            <Button size="sm" variant="outline" onClick={addItem}><Plus className="h-3 w-3 mr-1" /> {t("orderDetail.addLine")}</Button>
           </div>
-          {items.length === 0 && <p className="text-sm text-muted-foreground">No lines. Add products from your inventory.</p>}
+          {items.length === 0 && <p className="text-sm text-muted-foreground">{t("orderDetail.noLines")}</p>}
           <div className="space-y-4">
             {items.map((it, idx) => (
               <div key={idx} className="border border-border rounded-lg p-4 space-y-3">
