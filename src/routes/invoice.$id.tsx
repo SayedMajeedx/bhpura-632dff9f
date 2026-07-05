@@ -3,7 +3,7 @@ import { getPublicInvoice } from "@/lib/public-invoice.functions";
 import { useState } from "react";
 import { formatMoney } from "@/lib/format";
 import { formatAddressDetailed, regionLabel, type StructuredAddress } from "@/lib/bahrain-regions";
-import { derivePaymentStatus, PAYMENT_BADGE_CLASSES, PAYMENT_BADGE_LABEL } from "@/lib/payment-status";
+import { resolvePaymentStatus, PAYMENT_BADGE_CLASSES, PAYMENT_BADGE_LABEL } from "@/lib/payment-status";
 
 export const Route = createFileRoute("/invoice/$id")({
   ssr: false,
@@ -138,7 +138,7 @@ function PublicInvoice() {
                 <h1 style={{ color }} className="text-3xl sm:text-4xl font-semibold tracking-tight">{L.invoice}</h1>
                 <p className="text-base mt-1">{L.number}: {order.invoice_number}</p>
                 <p className="text-xs text-neutral-500 mt-2">{L.date}: {new Date(order.order_date).toLocaleDateString(locale)}</p>
-                <p className="text-xs text-neutral-500">{L.status}: {PAYMENT_BADGE_LABEL[derivePaymentStatus(order.status, Number(order.total_amount || 0), Number(order.advance_paid || 0))][lang]}</p>
+                <p className="text-xs text-neutral-500">{L.status}: {PAYMENT_BADGE_LABEL[resolvePaymentStatus(order.payment_status, order.status, Number(order.total_amount || order.total || 0), Number(order.advance_paid || 0))][lang]}</p>
                 {order.payment_method && (
                   <p className="text-xs text-neutral-500">{L.payment}: {PAY[order.payment_method]?.[lang] ?? order.payment_method}</p>
                 )}
@@ -199,7 +199,7 @@ function PublicInvoice() {
                 {Number(order.tax_rate) > 0 && <div className="flex justify-between"><span className="text-neutral-600">{L.vat} ({order.tax_rate}%)</span><span>{money(order.tax_amount)}</span></div>}
                 {Number(order.shipping) > 0 && <div className="flex justify-between"><span className="text-neutral-600">{L.shipping}</span><span>{money(order.shipping)}</span></div>}
                 {(() => {
-                  const badge = derivePaymentStatus(order.status, Number(order.total), Number(order.advance_paid ?? 0));
+                  const badge = resolvePaymentStatus(order.payment_status, order.status, Number(order.total), Number(order.advance_paid ?? 0));
                   const advance = Number(order.advance_paid ?? 0);
                   const remaining = Math.max(0, Number(order.total) - advance);
                   return (
