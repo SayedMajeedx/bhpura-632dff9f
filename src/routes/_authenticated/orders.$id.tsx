@@ -285,10 +285,57 @@ function OrderDetail() {
       toast.success(t("orderDetail.stockUpdated"));
     }
 
+    // Stock deltas: compare prior deducted items vs current, log per-variant changes
+    if (!se) {
+      const variants = variantsQ.data ?? [];
+      const wasDeducted = !!(orderQ.data as any)?.stock_deducted;
+      const priorItems = wasDeducted ? ((orderQ.data as any)?.order_items ?? []) : [];
+      const nowDeducting = DEDUCTING.has(order.status);
+      const prevByV = new Map<string, number>();
+      for (const p of priorItems as any[]) {
+        if (!p.variant_id) continue;
+        prevByV.set(p.variant_id, (prevByV.get(p.variant_id) ?? 0) + Number(p.quantity));
+      }
+      const wantByV = new Map<string, number>();
+      if (nowDeducting) {
+        for (const it of items) {
+          if (!it.variant_id) continue;
+          wantByV.set(it.variant_id, (wantByV.get(it.variant_id) ?? 0) + Number(it.quantity));
+        }
+      }
+      const vids = new Set<string>([...prevByV.keys(), ...wantByV.keys()]);
+      for (const vid of vids) {
+        const delta = (wantByV.get(vid) ?? 0) - (prevByV.get(vid) ?? 0);
+        if (delta === 0) continue;
+        const v = variants.find((x: any) => x.id === vid) as any;
+        const p = v ? (productsQ.data ?? []).find((x: any) => x.id === v.product_id) : null;
+        const vLabel = v ? `${(p as any)?.name ?? ""}${v.size ? ` · ${v.size}` : ""}${v.color ? ` · ${v.color}` : ""}` : vid;
+        const before = Number(v?.stock ?? 0) + (prevByV.get(vid) ?? 0);
+        const after = before - (wantByV.get(vid) ?? 0);
+        const inv = order.invoice_number ?? "";
+        if (delta > 0) {
+          logs.push({
+            action: "stock_change", order_id: order.id,
+            en: `Stock decreased from ${before} to ${after} for ${vLabel} due to Order #${inv}`,
+            ar: `انخفض المخزون من ${before} إلى ${after} لـ ${vLabel} بسبب الطلب رقم ${inv}`,
+          } as any);
+        } else {
+          logs.push({
+            action: "stock_change", order_id: order.id,
+            en: `Stock restored from ${before} to ${after} for ${vLabel} due to Order #${inv}`,
+            ar: `استُعيد المخزون من ${before} إلى ${after} لـ ${vLabel} بسبب الطلب رقم ${inv}`,
+          } as any);
+        }
+      }
+    }
+
+    if (logs.length > 0) await logActivityBatch(logs);
+
     toast.success("Saved");
     qc.invalidateQueries({ queryKey: ["order", id] });
     qc.invalidateQueries({ queryKey: ["orders"] });
     qc.invalidateQueries({ queryKey: ["variants"] });
+    qc.invalidateQueries({ queryKey: ["activity_logs"] });
   };
 
 
