@@ -246,7 +246,7 @@ function OrderDetail() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             <div>
-              <Label>Customer</Label>
+              <Label>{t("orderDetail.customer")}</Label>
               <Select value={order.customer_id ?? "none"} onValueChange={(v) => {
                 const cid = v === "none" ? null : v;
                 const def = cid ? (addressesQ.data ?? []).find((a) => a.customer_id === cid && a.is_default)
@@ -255,7 +255,7 @@ function OrderDetail() {
               }}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">— No customer —</SelectItem>
+                  <SelectItem value="none">{t("orderDetail.noCustomerOption")}</SelectItem>
                   {(customersQ.data ?? []).map((c: any) => (
                     <SelectItem key={c.id} value={c.id}>{c.name}{c.phone ? ` — ${c.phone}` : ""}</SelectItem>
                   ))}
@@ -263,20 +263,39 @@ function OrderDetail() {
               </Select>
             </div>
             <div>
-              <Label>Order date</Label>
+              <Label>{t("orderDetail.orderDate")}</Label>
               <Input type="date" value={order.order_date} onChange={(e) => setOrder({ ...order, order_date: e.target.value })} />
             </div>
             <div>
-              <Label>Status</Label>
+              <Label>{t("orderDetail.status")}</Label>
               <Select value={order.status} onValueChange={(v) => setOrder({ ...order, status: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="draft">Draft</SelectItem>
-                  <SelectItem value="confirmed">Confirmed</SelectItem>
-                  <SelectItem value="paid">Paid</SelectItem>
-                  <SelectItem value="shipped">Shipped</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                  <SelectItem value="draft">{t("status.draft")}</SelectItem>
+                  <SelectItem value="confirmed">{t("status.confirmed")}</SelectItem>
+                  <SelectItem value="paid">{t("status.paid")}</SelectItem>
+                  <SelectItem value="shipped">{t("status.shipped")}</SelectItem>
+                  <SelectItem value="completed">{t("status.completed")}</SelectItem>
+                  <SelectItem value="cancelled">{t("status.cancelled")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>{t("orderDetail.paymentMethod")}</Label>
+              <Select
+                value={order.payment_method ?? "none"}
+                onValueChange={(v) => setOrder({ ...order, payment_method: v === "none" ? null : v })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">{t("orderDetail.selectPayment")}</SelectItem>
+                  <SelectItem value="cash">{t("payment.cash")}</SelectItem>
+                  <SelectItem value="card">{t("payment.card")}</SelectItem>
+                  <SelectItem value="bank_transfer">{t("payment.bank_transfer")}</SelectItem>
+                  <SelectItem value="benefit">{t("payment.benefit")}</SelectItem>
+                  <SelectItem value="apple_pay">{t("payment.apple_pay")}</SelectItem>
+                  <SelectItem value="google_pay">{t("payment.google_pay")}</SelectItem>
+                  <SelectItem value="cod">{t("payment.cod")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
