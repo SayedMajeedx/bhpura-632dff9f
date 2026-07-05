@@ -150,7 +150,7 @@ function OrderDetail() {
 
   if (!order || !settingsQ.data) return <div className="p-8">Loading…</div>;
 
-  const currency = order.currency ?? "SAR";
+  const currency = order.currency ?? "BHD";
 
   const addItem = () => {
     setItems([...items, {
