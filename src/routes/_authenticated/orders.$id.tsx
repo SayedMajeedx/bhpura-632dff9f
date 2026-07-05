@@ -436,7 +436,11 @@ function OrderDetail() {
           <SendInvoiceDialog order={order} totals={totals} settings={settingsQ.data} currency={currency} />
           <Button variant="outline" onClick={copyLink}><LinkIcon className="h-4 w-4 mr-2" /> {t("orders.copyLink")}</Button>
           <Button variant="outline" onClick={printReceipt}><Receipt className="h-4 w-4 mr-2" /> {t("orders.printReceipt")}</Button>
-          <Button variant="outline" onClick={() => window.print()}><Printer className="h-4 w-4 mr-2" /> {t("orders.printA4")}</Button>
+          <Button variant="outline" onClick={async () => {
+            const el = document.querySelector<HTMLElement>(".printable-invoice");
+            const { downloadInvoicePdf } = await import("@/lib/download-invoice-pdf");
+            await downloadInvoicePdf(el, `invoice-${order.invoice_number ?? order.id}`);
+          }}><Printer className="h-4 w-4 mr-2" /> {t("orders.printA4")}</Button>
           <Button onClick={save}><Save className="h-4 w-4 mr-2" /> {t("common.save")}</Button>
         </div>
       </div>
@@ -870,21 +874,8 @@ function InvoicePreview({ order, items, settings, shippingAddress, paymentBadge 
         {settings.font_url && !isRTL && (
           <style>{`@font-face { font-family: 'InvoiceCustomFont'; src: url('${settings.font_url}'); font-display: swap; }`}</style>
         )}
-        <style>{`
-          @media print {
-            @page { margin: 12mm; }
-            body { background: #fff !important; }
-            .printable-invoice { direction: ${isRTL ? "rtl" : "ltr"} !important; unicode-bidi: isolate; box-shadow: none !important; border: 0 !important; background: #fff !important; }
-            .printable-invoice * { print-color-adjust: exact !important; -webkit-print-color-adjust: exact !important; }
-            /* Force legible black text for all invoice content on paper */
-            .printable-invoice, .printable-invoice p, .printable-invoice span,
-            .printable-invoice td, .printable-invoice th, .printable-invoice li,
-            .printable-invoice h1, .printable-invoice h2, .printable-invoice h3,
-            .printable-invoice strong, .printable-invoice em { color: #000 !important; }
-            /* Table header keeps its accent background but text stays white */
-            .printable-invoice thead th { color: #ffffff !important; }
-          }
-        `}</style>
+        {/* Browser print overrides removed — PDF is generated via html2pdf directly from the live DOM,
+            preserving the exact colors and typography configured by the user. */}
         <div className="p-4 sm:p-8 md:p-10 print:p-10" style={{ borderTop: `6px solid ${color}` }}>
           {/*
             Layout rule:

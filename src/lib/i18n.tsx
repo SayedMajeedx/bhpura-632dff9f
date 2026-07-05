@@ -180,7 +180,7 @@ const en: Dict = {
   "orders.linkCopied": "Link copied to clipboard!",
   "orders.linkFailed": "Could not copy link — try again.",
   "orders.printReceipt": "Print receipt",
-  "orders.printA4": "Print invoice (A4)",
+  "orders.printA4": "Download PDF",
   "orders.actions": "Actions",
   "orders.popupBlocked": "Popup blocked — allow popups to print the receipt.",
 
@@ -453,7 +453,7 @@ const ar: Dict = {
   "orders.linkCopied": "تم نسخ الرابط بنجاح!",
   "orders.linkFailed": "تعذّر نسخ الرابط — حاول مرة أخرى.",
   "orders.printReceipt": "طباعة الإيصال",
-  "orders.printA4": "طباعة الفاتورة (A4)",
+  "orders.printA4": "تحميل الفاتورة PDF",
   "orders.actions": "إجراءات",
   "orders.popupBlocked": "تم حظر النافذة المنبثقة — يرجى السماح بالنوافذ لطباعة الإيصال.",
 
