@@ -8,18 +8,33 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Pencil, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
-import { useT } from "@/lib/i18n";
+import { useT, useI18n } from "@/lib/i18n";
+import { BAHRAIN_REGIONS, regionLabel } from "@/lib/bahrain-regions";
 
 export const Route = createFileRoute("/_authenticated/customers")({
   component: CustomersPage,
 });
 
-type Customer = { id: string; name: string; phone: string | null; email: string | null; address: string | null; city: string | null; notes: string | null };
+type Customer = {
+  id: string;
+  name: string;
+  phone: string | null;
+  email: string | null;
+  address: string | null;
+  city: string | null;
+  notes: string | null;
+  region: string | null;
+  road: string | null;
+  house: string | null;
+  flat: string | null;
+};
 
 function CustomersPage() {
   const t = useT();
+  const { lang } = useI18n();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Customer | null>(null);
@@ -70,7 +85,7 @@ function CustomersPage() {
               <tr className="text-left">
                 <th className="p-4 font-medium">{t("customers.name")}</th>
                 <th className="p-4 font-medium">{t("customers.contact")}</th>
-                <th className="p-4 font-medium">{t("customers.city")}</th>
+                <th className="p-4 font-medium">{t("customers.region")}</th>
                 <th className="p-4"></th>
               </tr>
             </thead>
@@ -82,7 +97,7 @@ function CustomersPage() {
                     {c.phone && <div>{c.phone}</div>}
                     {c.email && <div>{c.email}</div>}
                   </td>
-                  <td className="p-4 text-muted-foreground">{c.city ?? "—"}</td>
+                  <td className="p-4 text-muted-foreground">{regionLabel(c.region, lang) || c.city || "—"}</td>
                   <td className="p-4 text-right">
                     <Button variant="ghost" size="icon" onClick={() => { setEditing(c); setOpen(true); }}><Pencil className="h-4 w-4" /></Button>
                     <Button variant="ghost" size="icon" onClick={() => del(c.id)}><Trash2 className="h-4 w-4" /></Button>
