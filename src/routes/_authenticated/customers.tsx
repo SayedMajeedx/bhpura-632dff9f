@@ -8,18 +8,33 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Pencil, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
-import { useT } from "@/lib/i18n";
+import { useT, useI18n } from "@/lib/i18n";
+import { BAHRAIN_REGIONS, regionLabel } from "@/lib/bahrain-regions";
 
 export const Route = createFileRoute("/_authenticated/customers")({
   component: CustomersPage,
 });
 
-type Customer = { id: string; name: string; phone: string | null; email: string | null; address: string | null; city: string | null; notes: string | null };
+type Customer = {
+  id: string;
+  name: string;
+  phone: string | null;
+  email: string | null;
+  address: string | null;
+  city: string | null;
+  notes: string | null;
+  region: string | null;
+  road: string | null;
+  house: string | null;
+  flat: string | null;
+};
 
 function CustomersPage() {
   const t = useT();
+  const { lang } = useI18n();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Customer | null>(null);
@@ -70,7 +85,7 @@ function CustomersPage() {
               <tr className="text-left">
                 <th className="p-4 font-medium">{t("customers.name")}</th>
                 <th className="p-4 font-medium">{t("customers.contact")}</th>
-                <th className="p-4 font-medium">{t("customers.city")}</th>
+                <th className="p-4 font-medium">{t("customers.region")}</th>
                 <th className="p-4"></th>
               </tr>
             </thead>
@@ -82,7 +97,7 @@ function CustomersPage() {
                     {c.phone && <div>{c.phone}</div>}
                     {c.email && <div>{c.email}</div>}
                   </td>
-                  <td className="p-4 text-muted-foreground">{c.city ?? "—"}</td>
+                  <td className="p-4 text-muted-foreground">{regionLabel(c.region, lang) || c.city || "—"}</td>
                   <td className="p-4 text-right">
                     <Button variant="ghost" size="icon" onClick={() => { setEditing(c); setOpen(true); }}><Pencil className="h-4 w-4" /></Button>
                     <Button variant="ghost" size="icon" onClick={() => del(c.id)}><Trash2 className="h-4 w-4" /></Button>
@@ -99,20 +114,39 @@ function CustomersPage() {
 
 function CustomerDialog({ customer, onSaved }: { customer: Customer | null; onSaved: () => void }) {
   const t = useT();
+  const { lang } = useI18n();
   const [f, setF] = useState({
     name: customer?.name ?? "",
     phone: customer?.phone ?? "",
     email: customer?.email ?? "",
-    address: customer?.address ?? "",
-    city: customer?.city ?? "",
+    region: customer?.region ?? "",
+    road: customer?.road ?? "",
+    house: customer?.house ?? "",
+    flat: customer?.flat ?? "",
     notes: customer?.notes ?? "",
   });
 
   const save = async () => {
     if (!f.name.trim()) return toast.error(t("customers.name"));
+    if (!f.region.trim() || !f.road.trim() || !f.house.trim()) {
+      return toast.error(t("customers.requiredError"));
+    }
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-    const payload = { ...f, user_id: user.id };
+    const composedAddress = [f.road, f.house, f.flat].filter((v) => v && v.trim()).join(" · ");
+    const payload = {
+      name: f.name,
+      phone: f.phone,
+      email: f.email,
+      notes: f.notes,
+      region: f.region,
+      road: f.road,
+      house: f.house,
+      flat: f.flat || null,
+      city: f.region, // keep legacy column in sync
+      address: composedAddress,
+      user_id: user.id,
+    };
     const { error } = customer
       ? await supabase.from("customers").update(payload).eq("id", customer.id)
       : await supabase.from("customers").insert(payload);
@@ -124,14 +158,40 @@ function CustomerDialog({ customer, onSaved }: { customer: Customer | null; onSa
     <DialogContent>
       <DialogHeader><DialogTitle>{customer ? t("customers.editTitle") : t("customers.newTitle")}</DialogTitle></DialogHeader>
       <div className="space-y-3">
-        <div><Label>{t("customers.name")}</Label><Input value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} /></div>
-        <div className="grid grid-cols-2 gap-3">
-          <div><Label>{t("customers.phone")}</Label><Input value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} /></div>
-          <div><Label>{t("customers.email")}</Label><Input value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} /></div>
+        <div>
+          <Label>{t("customers.name")} <span className="text-destructive">*</span></Label>
+          <Input className="text-start" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />
         </div>
-        <div><Label>{t("customers.address")}</Label><Input value={f.address} onChange={(e) => setF({ ...f, address: e.target.value })} /></div>
-        <div><Label>{t("customers.city")}</Label><Input value={f.city} onChange={(e) => setF({ ...f, city: e.target.value })} /></div>
-        <div><Label>{t("customers.notes")}</Label><Textarea value={f.notes} onChange={(e) => setF({ ...f, notes: e.target.value })} /></div>
+        <div className="grid grid-cols-2 gap-3">
+          <div><Label>{t("customers.phone")}</Label><Input className="text-start" value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} /></div>
+          <div><Label>{t("customers.email")}</Label><Input className="text-start" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} /></div>
+        </div>
+        <div>
+          <Label>{t("customers.region")} <span className="text-destructive">*</span></Label>
+          <Select value={f.region} onValueChange={(v) => setF({ ...f, region: v })}>
+            <SelectTrigger className="text-start"><SelectValue placeholder={t("customers.regionPlaceholder")} /></SelectTrigger>
+            <SelectContent>
+              {BAHRAIN_REGIONS.map((r) => (
+                <SelectItem key={r.value} value={r.value}>{lang === "ar" ? r.ar : r.en}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label>{t("customers.road")} <span className="text-destructive">*</span></Label>
+            <Input className="text-start" placeholder={t("customers.roadPlaceholder")} value={f.road} onChange={(e) => setF({ ...f, road: e.target.value })} />
+          </div>
+          <div>
+            <Label>{t("customers.house")} <span className="text-destructive">*</span></Label>
+            <Input className="text-start" placeholder={t("customers.housePlaceholder")} value={f.house} onChange={(e) => setF({ ...f, house: e.target.value })} />
+          </div>
+        </div>
+        <div>
+          <Label>{t("customers.flat")}</Label>
+          <Input className="text-start" placeholder={t("customers.flatPlaceholder")} value={f.flat} onChange={(e) => setF({ ...f, flat: e.target.value })} />
+        </div>
+        <div><Label>{t("customers.notes")}</Label><Textarea className="text-start" value={f.notes} onChange={(e) => setF({ ...f, notes: e.target.value })} /></div>
       </div>
       <DialogFooter><Button onClick={save}>{t("common.save")}</Button></DialogFooter>
     </DialogContent>
