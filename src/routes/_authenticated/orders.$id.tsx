@@ -17,6 +17,8 @@ import { useT, useI18n } from "@/lib/i18n";
 import { regionLabel, formatAddressLine, formatAddressDetailed, type StructuredAddress } from "@/lib/bahrain-regions";
 import { printThermalReceipt } from "@/lib/thermal-print";
 import { resolvePaymentStatus, PAYMENT_BADGE_CLASSES, PAYMENT_BADGE_LABEL, PAYMENT_BADGE_VALUES, type PaymentBadge } from "@/lib/payment-status";
+import { logActivityBatch } from "@/lib/activity-log";
+import { ActivityLogList } from "@/components/activity-log-list";
 
 function formatDeliveryAddress(
   c: { region?: string | null; road?: string | null; house?: string | null; flat?: string | null; address?: string | null; city?: string | null } | null | undefined,
