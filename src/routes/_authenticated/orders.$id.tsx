@@ -16,6 +16,7 @@ import { formatMoney } from "@/lib/format";
 import { useT, useI18n } from "@/lib/i18n";
 import { regionLabel, formatAddressLine, formatAddressDetailed, type StructuredAddress } from "@/lib/bahrain-regions";
 import { printThermalReceipt } from "@/lib/thermal-print";
+import { derivePaymentStatus, PAYMENT_BADGE_CLASSES, PAYMENT_BADGE_LABEL, type PaymentBadge } from "@/lib/payment-status";
 
 function formatDeliveryAddress(
   c: { region?: string | null; road?: string | null; house?: string | null; flat?: string | null; address?: string | null; city?: string | null } | null | undefined,
@@ -135,8 +136,15 @@ function OrderDetail() {
     const taxable = Math.max(0, subtotal - discount);
     const taxAmount = taxable * Number(order?.tax_rate ?? 0) / 100;
     const total = taxable + taxAmount + shipping;
-    return { subtotal, discount, shipping, taxAmount, total };
-  }, [items, order?.discount, order?.shipping, order?.tax_rate]);
+    const advancePaid = Math.max(0, Number(order?.advance_paid ?? 0));
+    const remaining = Math.max(0, total - advancePaid);
+    return { subtotal, discount, shipping, taxAmount, total, advancePaid, remaining };
+  }, [items, order?.discount, order?.shipping, order?.tax_rate, order?.advance_paid]);
+
+  const paymentBadge: PaymentBadge = useMemo(
+    () => derivePaymentStatus(order?.status, totals.total, totals.advancePaid),
+    [order?.status, totals.total, totals.advancePaid],
+  );
 
   if (!order || !settingsQ.data) return <div className="p-8">Loading…</div>;
 
@@ -211,6 +219,7 @@ function OrderDetail() {
       payment_method: order.payment_method ?? null,
       discount: totals.discount, tax_rate: order.tax_rate, tax_amount: totals.taxAmount,
       shipping: totals.shipping, subtotal: totals.subtotal, total: totals.total,
+      advance_paid: totals.advancePaid,
       currency, order_date: order.order_date,
     }).eq("id", order.id);
     if (oe) return toast.error(oe.message);
