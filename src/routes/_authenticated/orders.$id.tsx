@@ -8,13 +8,13 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Plus, Trash2, Printer, Save, Send } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Printer, Save, Send, Search, Star } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { formatMoney } from "@/lib/format";
 import { useT, useI18n } from "@/lib/i18n";
-import { regionLabel } from "@/lib/bahrain-regions";
+import { regionLabel, formatAddressLine, type StructuredAddress } from "@/lib/bahrain-regions";
 
 function formatDeliveryAddress(
   c: { region?: string | null; road?: string | null; house?: string | null; flat?: string | null; address?: string | null; city?: string | null } | null | undefined,
@@ -33,6 +33,17 @@ function formatDeliveryAddress(
   const sep = lang === "ar" ? "، " : ", ";
   return filtered.length ? [filtered.join(sep)] : [];
 }
+
+type SavedAddress = {
+  id: string;
+  customer_id: string;
+  label: string | null;
+  region: string | null;
+  road: string | null;
+  house: string | null;
+  flat: string | null;
+  is_default: boolean;
+};
 
 
 export const Route = createFileRoute("/_authenticated/orders/$id")({
@@ -77,6 +88,14 @@ function OrderDetail() {
     queryKey: ["customers"],
     queryFn: async () => (await supabase.from("customers").select("*").order("name")).data ?? [],
   });
+  const addressesQ = useQuery({
+    queryKey: ["customer_addresses"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("customer_addresses").select("*");
+      if (error) throw error;
+      return (data ?? []) as SavedAddress[];
+    },
+  });
   const customQ = useQuery({
     queryKey: ["customizations"],
     queryFn: async () => (await supabase.from("customization_options").select("*").order("name")).data ?? [],
@@ -93,6 +112,7 @@ function OrderDetail() {
 
   const [order, setOrder] = useState<Order | null>(null);
   const [items, setItems] = useState<Item[]>([]);
+  const [phoneSearch, setPhoneSearch] = useState("");
 
   useEffect(() => {
     if (orderQ.data) {
@@ -159,6 +179,7 @@ function OrderDetail() {
 
     const { error: oe } = await supabase.from("orders").update({
       customer_id: order.customer_id, status: order.status, notes: order.notes,
+      shipping_address_id: order.shipping_address_id ?? null,
       discount: totals.discount, tax_rate: order.tax_rate, tax_amount: totals.taxAmount,
       shipping: totals.shipping, subtotal: totals.subtotal, total: totals.total,
       currency, order_date: order.order_date,
