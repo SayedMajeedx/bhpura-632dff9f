@@ -236,8 +236,8 @@ function PublicInvoice() {
               </table>
             </div>
 
-            {/* Totals block: EN → right, AR → left */}
-            <div className="flex" style={{ justifyContent: isRTL ? "flex-start" : "flex-end" }}>
+            {/* Totals block: EN → left side, AR → right side (both anchor to doc start). */}
+            <div className="flex" style={{ justifyContent: "flex-start" }}>
               <div className="w-full sm:w-72 text-sm space-y-1">
                 <div className="flex justify-between"><span style={{ opacity: 0.75 }}>{L.subtotal}</span><span>{money(order.subtotal)}</span></div>
                 {Number(order.discount) > 0 && <div className="flex justify-between"><span style={{ opacity: 0.75 }}>{L.discount}</span><span>− {money(order.discount)}</span></div>}
