@@ -60,3 +60,30 @@ export function formatAddressLine(a: StructuredAddress | null | undefined, lang:
   const sep = lang === "ar" ? "، " : ", ";
   return parts.filter((p) => p && p.length > 0).join(sep);
 }
+
+/**
+ * Detailed, labeled address for invoice bill-to.
+ * AR: "المنطقة: X، طريق: Y، منزل: Z، شقة: W"
+ * EN: "Flat W, House Z, Road Y, X"
+ * Skips empty fields (flat is optional).
+ */
+export function formatAddressDetailed(a: StructuredAddress | null | undefined, lang: "en" | "ar"): string {
+  if (!a) return "";
+  const region = regionLabel(a.region, lang);
+  const road = a.road?.trim() || "";
+  const house = a.house?.trim() || "";
+  const flat = a.flat?.trim() || "";
+  const parts: string[] = [];
+  if (lang === "ar") {
+    if (region) parts.push(`المنطقة: ${region}`);
+    if (road) parts.push(`طريق: ${road}`);
+    if (house) parts.push(`منزل: ${house}`);
+    if (flat) parts.push(`شقة: ${flat}`);
+    return parts.join("، ");
+  }
+  if (flat) parts.push(`Flat ${flat}`);
+  if (house) parts.push(`House ${house}`);
+  if (road) parts.push(`Road ${road}`);
+  if (region) parts.push(region);
+  return parts.join(", ");
+}

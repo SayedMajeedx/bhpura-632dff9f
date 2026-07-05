@@ -52,7 +52,7 @@ function OrdersList() {
   };
 
   return (
-    <div className="p-8 max-w-6xl">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto">
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-4xl font-display">{t("orders.title")}</h1>
@@ -68,7 +68,8 @@ function OrdersList() {
         </Card>
       ) : (
         <Card className="overflow-hidden">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[640px] text-sm">
             <thead className="bg-secondary/50">
               <tr className="text-left">
                 <th className="p-4 font-medium">{t("orders.invoice")}</th>
@@ -98,6 +99,7 @@ function OrdersList() {
               ))}
             </tbody>
           </table>
+          </div>
         </Card>
       )}
     </div>

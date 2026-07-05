@@ -14,7 +14,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { formatMoney } from "@/lib/format";
 import { useT, useI18n } from "@/lib/i18n";
-import { regionLabel, formatAddressLine, type StructuredAddress } from "@/lib/bahrain-regions";
+import { regionLabel, formatAddressLine, formatAddressDetailed, type StructuredAddress } from "@/lib/bahrain-regions";
 
 function formatDeliveryAddress(
   c: { region?: string | null; road?: string | null; house?: string | null; flat?: string | null; address?: string | null; city?: string | null } | null | undefined,
@@ -204,12 +204,12 @@ function OrderDetail() {
   };
 
   return (
-    <div className="p-8 max-w-6xl">
-      <div className="no-print mb-6 flex items-center justify-between">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto">
+      <div className="no-print mb-6 flex flex-wrap items-center justify-between gap-3">
         <Link to="/orders" className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-2">
           <ArrowLeft className="h-4 w-4" /> {t("orderDetail.back")}
         </Link>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <SendInvoiceDialog order={order} totals={totals} settings={settingsQ.data} currency={currency} />
           <Button variant="outline" onClick={() => window.print()}><Printer className="h-4 w-4 mr-2" /> {t("common.print")}</Button>
           <Button onClick={save}><Save className="h-4 w-4 mr-2" /> {t("common.save")}</Button>
@@ -244,7 +244,7 @@ function OrderDetail() {
               <p className="text-xs text-muted-foreground mt-1 italic">{t("customers.noMatch")}</p>
             )}
           </div>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             <div>
               <Label>Customer</Label>
               <Select value={order.customer_id ?? "none"} onValueChange={(v) => {
@@ -340,8 +340,8 @@ function OrderDetail() {
           <div className="space-y-4">
             {items.map((it, idx) => (
               <div key={idx} className="border border-border rounded-lg p-4 space-y-3">
-                <div className="grid grid-cols-12 gap-3">
-                  <div className="col-span-5">
+                <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
+                  <div className="sm:col-span-5">
                     <Label>From inventory</Label>
                     <Select value={it.variant_id ?? "custom"} onValueChange={(v) => v !== "custom" && pickVariant(idx, v)}>
                       <SelectTrigger><SelectValue placeholder="Pick a variant..." /></SelectTrigger>
@@ -359,13 +359,13 @@ function OrderDetail() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="col-span-4">
+                  <div className="sm:col-span-4">
                     <Label>Description</Label>
                     <Input value={it.description} onChange={(e) => updateItem(idx, { description: e.target.value })} />
                   </div>
-                  <div className="col-span-1"><Label>Qty</Label>
+                  <div className="sm:col-span-1"><Label>Qty</Label>
                     <Input type="number" min={1} value={it.quantity} onChange={(e) => updateItem(idx, { quantity: Number(e.target.value) })} /></div>
-                  <div className="col-span-2"><Label>Unit price</Label>
+                  <div className="sm:col-span-2"><Label>Unit price</Label>
                     <Input type="number" step="0.01" value={it.unit_price} onChange={(e) => updateItem(idx, { unit_price: Number(e.target.value) })} /></div>
                 </div>
                 <div>
@@ -399,13 +399,13 @@ function OrderDetail() {
         </Card>
 
         <Card className="p-6">
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <Label>Notes</Label>
               <Textarea value={order.notes ?? ""} onChange={(e) => setOrder({ ...order, notes: e.target.value })} rows={5} />
             </div>
             <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div><Label>Discount</Label>
                   <Input type="number" step="0.01" value={order.discount} onChange={(e) => setOrder({ ...order, discount: Number(e.target.value) })} /></div>
                 <div><Label>Shipping</Label>
@@ -588,8 +588,8 @@ function InvoicePreview({ order, items, settings, shippingAddress }: { order: an
             .printable-invoice * { print-color-adjust: exact !important; -webkit-print-color-adjust: exact !important; }
           }
         `}</style>
-        <div className="p-10" style={{ borderTop: `6px solid ${color}` }}>
-          <div className="flex justify-between items-start mb-10 gap-6">
+        <div className="p-4 sm:p-8 md:p-10 print:p-10" style={{ borderTop: `6px solid ${color}` }}>
+          <div className="flex flex-col md:flex-row justify-between items-start mb-8 md:mb-10 gap-4 md:gap-6 print:flex-row">
             <div className="flex-1 min-w-0">
               {settings.logo_url && (
                 <div
@@ -618,8 +618,8 @@ function InvoicePreview({ order, items, settings, shippingAddress }: { order: an
                 {settings.vat_number && ` · ${L.vatLabel} ${num(settings.vat_number)}`}
               </p>
             </div>
-            <div className="text-end">
-              <h1 className="text-4xl font-display tracking-tight" style={{ color }}>{L.invoice}</h1>
+            <div className="text-start md:text-end print:text-end w-full md:w-auto">
+              <h1 className="text-3xl sm:text-4xl font-display tracking-tight" style={{ color }}>{L.invoice}</h1>
               <p className="text-lg mt-1">{L.invoiceNumber}: {num(order.invoice_number)}</p>
               <p className="text-xs text-neutral-500 mt-2">{L.date}: {new Date(order.order_date).toLocaleDateString(isRTL ? "ar-BH" : undefined)}</p>
               <p className="text-xs text-neutral-500">{L.status}: {tStatus(order.status, invoiceLang)}</p>
@@ -633,51 +633,67 @@ function InvoicePreview({ order, items, settings, shippingAddress }: { order: an
             <div className="mb-8 text-start">
               <p className="text-xs uppercase tracking-wider text-neutral-500 mb-1">{L.billTo}</p>
               <p className="font-medium">{order.customers.name}</p>
-              {(() => {
-                const line = shippingAddress ? formatAddressLine(shippingAddress as StructuredAddress, invoiceLang) : "";
-                if (line) {
-                  return <p className="text-sm text-neutral-600">{isRTL ? toArabicDigits(line) : line}</p>;
-                }
-                return formatDeliveryAddress(order.customers, invoiceLang).map((l, i) => (
-                  <p key={i} className="text-sm text-neutral-600 whitespace-pre-line">
-                    {isRTL ? toArabicDigits(l) : l}
-                  </p>
-                ));
-              })()}
               {order.customers.phone && <p className="text-sm text-neutral-600">{num(order.customers.phone)}</p>}
               {order.customers.email && <p className="text-sm text-neutral-600">{order.customers.email}</p>}
+              {(() => {
+                const detailed = shippingAddress
+                  ? formatAddressDetailed(shippingAddress as StructuredAddress, invoiceLang)
+                  : "";
+                const legacy = !detailed ? formatDeliveryAddress(order.customers, invoiceLang) : [];
+                if (!detailed && legacy.length === 0) return null;
+                return (
+                  <div className="mt-3 pt-3 border-t border-neutral-200">
+                    <p className="text-xs uppercase tracking-wider text-neutral-500 mb-1">
+                      {isRTL ? "عنوان التوصيل" : "Delivery address"}
+                    </p>
+                    {detailed ? (
+                      <p className="text-sm text-neutral-700 leading-relaxed">
+                        {isRTL ? toArabicDigits(detailed) : detailed}
+                      </p>
+                    ) : (
+                      legacy.map((l, i) => (
+                        <p key={i} className="text-sm text-neutral-700 whitespace-pre-line">
+                          {isRTL ? toArabicDigits(l) : l}
+                        </p>
+                      ))
+                    )}
+                  </div>
+                );
+              })()}
             </div>
           )}
 
-          <table className="w-full text-sm mb-6">
-            <thead>
-              <tr style={{ backgroundColor: color, color: "white" }}>
-                <th className="text-start p-3">{L.description}</th>
-                <th className="text-end p-3 w-16">{L.qty}</th>
-                <th className="text-end p-3 w-28">{L.unit}</th>
-                <th className="text-end p-3 w-28">{L.total}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((it, i) => (
-                <tr key={i} className="border-b border-neutral-200 align-top">
-                  <td className="p-3 text-start">
-                    <p className="font-medium">{it.description || "—"}</p>
-                    {it.customizations.length > 0 && (
-                      <ul className="mt-1 text-xs text-neutral-600 space-y-0.5">
-                        {it.customizations.map((c, ci) => (
-                          <li key={ci}>+ {c.name} ({money(c.price_delta)})</li>
-                        ))}
-                      </ul>
-                    )}
-                  </td>
-                  <td className="p-3 text-end">{num(it.quantity)}</td>
-                  <td className="p-3 text-end">{money(it.unit_price + it.customization_total)}</td>
-                  <td className="p-3 font-medium text-end">{money(it.line_total)}</td>
+          <div className="-mx-4 sm:mx-0 overflow-x-auto print:overflow-visible print:mx-0">
+            <table className="w-full min-w-[520px] text-sm mb-6">
+              <thead>
+                <tr style={{ backgroundColor: color, color: "white" }}>
+                  <th className="text-start p-3">{L.description}</th>
+                  <th className="text-end p-3 w-16">{L.qty}</th>
+                  <th className="text-end p-3 w-28">{L.unit}</th>
+                  <th className="text-end p-3 w-28">{L.total}</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {items.map((it, i) => (
+                  <tr key={i} className="border-b border-neutral-200 align-top">
+                    <td className="p-3 text-start">
+                      <p className="font-medium">{it.description || "—"}</p>
+                      {it.customizations.length > 0 && (
+                        <ul className="mt-1 text-xs text-neutral-600 space-y-0.5">
+                          {it.customizations.map((c, ci) => (
+                            <li key={ci}>+ {c.name} ({money(c.price_delta)})</li>
+                          ))}
+                        </ul>
+                      )}
+                    </td>
+                    <td className="p-3 text-end">{num(it.quantity)}</td>
+                    <td className="p-3 text-end whitespace-nowrap">{money(it.unit_price + it.customization_total)}</td>
+                    <td className="p-3 font-medium text-end whitespace-nowrap">{money(it.line_total)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
           <div className="flex justify-end">
             <div className="w-72 text-sm space-y-1">
