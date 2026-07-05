@@ -16,7 +16,7 @@ import { formatMoney } from "@/lib/format";
 import { useT, useI18n } from "@/lib/i18n";
 import { regionLabel, formatAddressLine, formatAddressDetailed, type StructuredAddress } from "@/lib/bahrain-regions";
 import { printThermalReceipt } from "@/lib/thermal-print";
-import { derivePaymentStatus, PAYMENT_BADGE_CLASSES, PAYMENT_BADGE_LABEL, type PaymentBadge } from "@/lib/payment-status";
+import { resolvePaymentStatus, PAYMENT_BADGE_CLASSES, PAYMENT_BADGE_LABEL, PAYMENT_BADGE_VALUES, type PaymentBadge } from "@/lib/payment-status";
 
 function formatDeliveryAddress(
   c: { region?: string | null; road?: string | null; house?: string | null; flat?: string | null; address?: string | null; city?: string | null } | null | undefined,
@@ -142,8 +142,8 @@ function OrderDetail() {
   }, [items, order?.discount, order?.shipping, order?.tax_rate, order?.advance_paid]);
 
   const paymentBadge: PaymentBadge = useMemo(
-    () => derivePaymentStatus(order?.status, totals.total, totals.advancePaid),
-    [order?.status, totals.total, totals.advancePaid],
+    () => resolvePaymentStatus(order?.payment_status, order?.status, totals.total, totals.advancePaid),
+    [order?.payment_status, order?.status, totals.total, totals.advancePaid],
   );
 
   if (!order || !settingsQ.data) return <div className="p-8">Loading…</div>;
@@ -217,11 +217,12 @@ function OrderDetail() {
       customer_id: order.customer_id, status: order.status, notes: order.notes,
       shipping_address_id: order.shipping_address_id ?? null,
       payment_method: order.payment_method ?? null,
+      payment_status: order.payment_status ?? "unpaid",
       discount: totals.discount, tax_rate: order.tax_rate, tax_amount: totals.taxAmount,
       shipping: totals.shipping, subtotal: totals.subtotal, total: totals.total,
       advance_paid: totals.advancePaid,
       currency, order_date: order.order_date,
-    }).eq("id", order.id);
+    } as any).eq("id", order.id);
     if (oe) return toast.error(oe.message);
 
     await supabase.from("order_items").delete().eq("order_id", order.id);
@@ -577,6 +578,22 @@ function OrderDetail() {
                   value={order.advance_paid ?? 0}
                   onChange={(e) => setOrder({ ...order, advance_paid: Number(e.target.value) })}
                 />
+              </div>
+              <div>
+                <Label>{t("orderDetail.paymentStatus")}</Label>
+                <Select
+                  value={order.payment_status ?? "unpaid"}
+                  onValueChange={(v) => setOrder({ ...order, payment_status: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PAYMENT_BADGE_VALUES.map((v) => (
+                      <SelectItem key={v} value={v}>{t(`payStatus.${v}`)}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="border-t border-border pt-3 space-y-1 text-sm">
                 <Row label={t("orderDetail.subtotal")} value={formatMoney(totals.subtotal, currency)} />
