@@ -804,7 +804,7 @@ function InvoicePreview({ order, items, settings, shippingAddress, paymentBadge 
               <h1 className="text-3xl sm:text-4xl font-display tracking-tight" style={{ color }}>{L.invoice}</h1>
               <p className="text-lg mt-1">{L.invoiceNumber}: {num(order.invoice_number)}</p>
               <p className="text-xs text-neutral-500 mt-2">{L.date}: {new Date(order.order_date).toLocaleDateString(isRTL ? "ar-BH" : undefined)}</p>
-              <p className="text-xs text-neutral-500">{L.status}: {PAYMENT_BADGE_LABEL[paymentBadge][invoiceLang]}</p>
+              <p className="text-xs text-neutral-500">{L.status}: {PAYMENT_BADGE_LABEL[paymentBadge ?? "unpaid"][invoiceLang]}</p>
               {order.payment_method && (
                 <p className="text-xs text-neutral-500">{L.paymentMethod}: {tPayment(order.payment_method, invoiceLang)}</p>
               )}
