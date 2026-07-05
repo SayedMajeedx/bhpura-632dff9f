@@ -189,6 +189,25 @@ const en: Dict = {
   "status.shipped": "Shipped",
   "status.completed": "Completed",
   "status.cancelled": "Cancelled",
+
+  "orderDetail.customer": "Customer",
+  "orderDetail.noCustomerOption": "— No customer —",
+  "orderDetail.status": "Status",
+  "orderDetail.paymentMethod": "Payment method",
+  "orderDetail.selectPayment": "— Select payment —",
+  "orderDetail.vat": "VAT",
+  "orderDetail.grandTotal": "Grand Total",
+  "orderDetail.addonsHint": "Add options in Inventory → Customization add-ons.",
+  "orderDetail.insufficientStock": "Insufficient stock for one or more items. Adjust quantities or restock before confirming.",
+  "orderDetail.stockUpdated": "Inventory updated",
+
+  "payment.cash": "Cash",
+  "payment.card": "Card",
+  "payment.bank_transfer": "Bank transfer",
+  "payment.benefit": "Benefit",
+  "payment.apple_pay": "Apple Pay",
+  "payment.google_pay": "Google Pay",
+  "payment.cod": "Cash on delivery",
 };
 
 const ar: Dict = {
