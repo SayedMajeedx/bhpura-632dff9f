@@ -425,8 +425,8 @@ function InvoicePreview({ order, items, settings }: { order: any; items: Item[];
                   <Rnd
                     size={{ width: logoBox.width, height: logoBox.height }}
                     position={{ x: logoBox.x, y: logoBox.y }}
-                    onDragStop={(_e, d) => setLogoBox((b) => ({ ...b, x: d.x, y: d.y }))}
-                    onResizeStop={(_e, _dir, ref, _delta, pos) =>
+                    onDragStop={(_e: any, d: any) => setLogoBox((b) => ({ ...b, x: d.x, y: d.y }))}
+                    onResizeStop={(_e: any, _dir: any, ref: any, _delta: any, pos: any) =>
                       setLogoBox({
                         width: parseInt(ref.style.width, 10),
                         height: parseInt(ref.style.height, 10),
