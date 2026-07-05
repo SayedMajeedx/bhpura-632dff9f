@@ -49,6 +49,13 @@ const en: Dict = {
   "dashboard.unitsInStock": "Units in stock",
   "dashboard.recentOrders": "Recent orders",
   "dashboard.noOrders": "No orders yet. Create one from the Orders page.",
+  "dashboard.revenueMonth": "Revenue this month",
+  "dashboard.ordersToday": "Orders today",
+  "dashboard.topSelling": "Top selling items",
+  "dashboard.topSellingSubtitle": "By units sold across all orders",
+  "dashboard.unitsSold": "sold",
+  "dashboard.noTopSelling": "No sales yet.",
+
 
   "customers.title": "Customers",
   "customers.subtitle": "Your clientele, kept close.",
@@ -130,6 +137,14 @@ const en: Dict = {
   "orders.total": "Total",
   "orders.noCustomer": "No customer",
   "orders.deleteConfirm": "Delete this order?",
+  "orders.copyLink": "Copy invoice link",
+  "orders.linkCopied": "Link copied to clipboard!",
+  "orders.linkFailed": "Could not copy link — try again.",
+  "orders.printReceipt": "Print receipt",
+  "orders.printA4": "Print invoice (A4)",
+  "orders.actions": "Actions",
+  "orders.popupBlocked": "Popup blocked — allow popups to print the receipt.",
+
 
   "orderDetail.back": "Back to orders",
   "orderDetail.sendInvoice": "Send invoice",
@@ -255,6 +270,13 @@ const ar: Dict = {
   "dashboard.unitsInStock": "قطع في المخزون",
   "dashboard.recentOrders": "أحدث الطلبات",
   "dashboard.noOrders": "لا توجد طلبات بعد. أنشئ طلباً من صفحة الطلبات.",
+  "dashboard.revenueMonth": "إيرادات هذا الشهر",
+  "dashboard.ordersToday": "طلبات اليوم",
+  "dashboard.topSelling": "الأكثر مبيعاً",
+  "dashboard.topSellingSubtitle": "حسب الكميات المباعة في جميع الطلبات",
+  "dashboard.unitsSold": "مباعة",
+  "dashboard.noTopSelling": "لا توجد مبيعات بعد.",
+
 
   "customers.title": "العملاء",
   "customers.subtitle": "عميلاتك المميّزات دائماً بالقرب.",
@@ -336,6 +358,14 @@ const ar: Dict = {
   "orders.total": "الإجمالي",
   "orders.noCustomer": "بدون عميلة",
   "orders.deleteConfirm": "حذف هذا الطلب؟",
+  "orders.copyLink": "نسخ رابط الفاتورة",
+  "orders.linkCopied": "تم نسخ الرابط بنجاح!",
+  "orders.linkFailed": "تعذّر نسخ الرابط — حاول مرة أخرى.",
+  "orders.printReceipt": "طباعة الإيصال",
+  "orders.printA4": "طباعة الفاتورة (A4)",
+  "orders.actions": "إجراءات",
+  "orders.popupBlocked": "تم حظر النافذة المنبثقة — يرجى السماح بالنوافذ لطباعة الإيصال.",
+
 
   "orderDetail.back": "العودة للطلبات",
   "orderDetail.sendInvoice": "إرسال الفاتورة",
