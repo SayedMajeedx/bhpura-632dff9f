@@ -108,7 +108,7 @@ function ProductsSection({ products, variants, onChanged }: { products: Product[
       <div className="flex justify-end">
         <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setEditing(null); }}>
           <DialogTrigger asChild>
-            <Button onClick={() => setEditing(null)}><Plus className="h-4 w-4 mr-2" /> {t("inventory.newProduct")}</Button>
+            <Button onClick={() => setEditing(null)}><Plus className="h-4 w-4 me-2" /> {t("inventory.newProduct")}</Button>
           </DialogTrigger>
           <ProductDialog product={editing} onSaved={() => { setOpen(false); setEditing(null); onChanged(); }} />
         </Dialog>
