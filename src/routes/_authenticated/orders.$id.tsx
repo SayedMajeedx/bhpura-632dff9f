@@ -911,7 +911,6 @@ function InvoicePreview({ order, items, settings, shippingAddress, paymentBadge 
                   />
                 </div>
               )}
-              {settings.address && <p className="text-sm whitespace-pre-line mt-1" style={{ opacity: 0.75 }}>{isRTL ? settings.address : (settings.address as string).replace(/مجمع/g, "Block").replace(/طريق/g, "Road").replace(/منزل/g, "House").replace(/شقة/g, "Flat").replace(/شارع/g, "Street")}</p>}
               <p className="text-xs mt-1" style={{ opacity: 0.65 }}>
                 {[settings.phone, settings.email].filter(Boolean).join(" · ")}
                 {settings.vat_number && ` · ${L.vatLabel} ${num(settings.vat_number)}`}

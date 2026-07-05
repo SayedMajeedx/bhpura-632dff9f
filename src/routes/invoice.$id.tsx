@@ -95,7 +95,6 @@ function PublicInvoice() {
   const color = settings?.primary_color || "#8b6f47";
   const textColor = settings?.text_color || "#1a1a1a";
   const bgColor = settings?.background_color || "#ffffff";
-  const brand = settings?.business_name || (lang === "ar" ? "بيورا" : "Pura");
   const items = order.order_items ?? [];
 
   const money = (n: number) => formatMoney(Number(n || 0), currency, locale);
@@ -105,20 +104,6 @@ function PublicInvoice() {
     : "";
   const legacyRegion = order.customers && (order.customers as any).region
     ? regionLabel((order.customers as any).region, lang) : "";
-
-  // Translate free-text business address terms when showing the English invoice.
-  const displayBusinessAddress = (() => {
-    const raw: string | null | undefined = settings?.address;
-    if (!raw) return "";
-    if (isRTL) return raw;
-    return raw
-      .replace(/مجمع/g, "Block")
-      .replace(/طريق/g, "Road")
-      .replace(/شارع/g, "Street")
-      .replace(/منزل/g, "House")
-      .replace(/شقة/g, "Flat")
-      .replace(/مبنى/g, "Building");
-  })();
 
   return (
     <div dir={isRTL ? "rtl" : "ltr"} lang={lang} className="min-h-screen bg-neutral-100 py-6 px-3 sm:py-10 sm:px-6">
@@ -170,7 +155,6 @@ function PublicInvoice() {
                     style={{ marginInlineEnd: "auto" }}
                   />
                 )}
-                {displayBusinessAddress && <p className="text-sm whitespace-pre-line mt-1" style={{ opacity: 0.75 }}>{displayBusinessAddress}</p>}
                 <p className="text-xs mt-1" style={{ opacity: 0.65 }}>
                   {[settings?.phone, settings?.email].filter(Boolean).join(" · ")}
                   {settings?.vat_number && ` · ${L.vatId} ${settings.vat_number}`}
