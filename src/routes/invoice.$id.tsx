@@ -279,8 +279,8 @@ function PublicInvoice() {
             </div>
 
             {(order.notes || settings?.footer_note) && (
-              <div className="mt-8 pt-6 border-t border-neutral-200 text-sm text-neutral-600 space-y-2">
-                {order.notes && <p><strong className="text-neutral-800">{L.notes}: </strong>{order.notes}</p>}
+              <div className="mt-8 pt-6 border-t border-neutral-200 text-sm space-y-2" style={{ opacity: 0.85 }}>
+                {order.notes && <p><strong>{L.notes}: </strong>{order.notes}</p>}
                 {settings?.footer_note && <p className="italic">{settings.footer_note}</p>}
               </div>
             )}
