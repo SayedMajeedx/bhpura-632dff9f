@@ -1,7 +1,5 @@
 export type PaymentBadge = "paid" | "partial" | "unpaid";
 
-const PAID_STATUSES = new Set(["paid", "shipped", "completed"]);
-
 export function derivePaymentStatus(
   orderStatus: string | null | undefined,
   total: number,
@@ -9,9 +7,12 @@ export function derivePaymentStatus(
 ): PaymentBadge {
   const t = Number(total || 0);
   const a = Number(advance || 0);
-  if (orderStatus && PAID_STATUSES.has(orderStatus)) return "paid";
-  if (t > 0 && a >= t) return "paid";
-  if (a > 0 && a < t) return "partial";
+  const remaining = +(t - a).toFixed(2);
+  // Fully paid: remaining is exactly 0 (and there's a total), or manually marked paid with no outstanding balance
+  if (t > 0 && remaining <= 0) return "paid";
+  if (orderStatus === "paid" && remaining <= 0) return "paid";
+  // Partial: some advance paid but still a remaining balance
+  if (a > 0 && remaining > 0) return "partial";
   return "unpaid";
 }
 
