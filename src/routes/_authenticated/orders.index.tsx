@@ -68,7 +68,8 @@ function OrdersList() {
         </Card>
       ) : (
         <Card className="overflow-hidden">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[640px] text-sm">
             <thead className="bg-secondary/50">
               <tr className="text-left">
                 <th className="p-4 font-medium">{t("orders.invoice")}</th>
