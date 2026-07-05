@@ -520,7 +520,7 @@ function toArabicDigits(str: string) {
   return str.replace(/[0-9]/g, (d) => map[+d]);
 }
 
-function InvoicePreview({ order, items, settings }: { order: any; items: Item[]; settings: any }) {
+function InvoicePreview({ order, items, settings, shippingAddress }: { order: any; items: Item[]; settings: any; shippingAddress?: SavedAddress | null }) {
   const currency = order.currency;
   const color = settings.primary_color || "#8b6f47";
   const bg = settings.background_color || "#ffffff";
