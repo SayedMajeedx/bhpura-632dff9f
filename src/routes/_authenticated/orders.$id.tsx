@@ -618,8 +618,8 @@ function InvoicePreview({ order, items, settings, shippingAddress }: { order: an
                 {settings.vat_number && ` · ${L.vatLabel} ${num(settings.vat_number)}`}
               </p>
             </div>
-            <div className="text-end">
-              <h1 className="text-4xl font-display tracking-tight" style={{ color }}>{L.invoice}</h1>
+            <div className="text-start md:text-end print:text-end w-full md:w-auto">
+              <h1 className="text-3xl sm:text-4xl font-display tracking-tight" style={{ color }}>{L.invoice}</h1>
               <p className="text-lg mt-1">{L.invoiceNumber}: {num(order.invoice_number)}</p>
               <p className="text-xs text-neutral-500 mt-2">{L.date}: {new Date(order.order_date).toLocaleDateString(isRTL ? "ar-BH" : undefined)}</p>
               <p className="text-xs text-neutral-500">{L.status}: {tStatus(order.status, invoiceLang)}</p>
