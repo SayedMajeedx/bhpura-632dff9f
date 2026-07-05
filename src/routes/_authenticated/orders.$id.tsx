@@ -204,12 +204,12 @@ function OrderDetail() {
   };
 
   return (
-    <div className="p-8 max-w-6xl">
-      <div className="no-print mb-6 flex items-center justify-between">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto">
+      <div className="no-print mb-6 flex flex-wrap items-center justify-between gap-3">
         <Link to="/orders" className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-2">
           <ArrowLeft className="h-4 w-4" /> {t("orderDetail.back")}
         </Link>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <SendInvoiceDialog order={order} totals={totals} settings={settingsQ.data} currency={currency} />
           <Button variant="outline" onClick={() => window.print()}><Printer className="h-4 w-4 mr-2" /> {t("common.print")}</Button>
           <Button onClick={save}><Save className="h-4 w-4 mr-2" /> {t("common.save")}</Button>
