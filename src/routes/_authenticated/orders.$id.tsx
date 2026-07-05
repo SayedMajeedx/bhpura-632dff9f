@@ -16,6 +16,7 @@ import { formatMoney } from "@/lib/format";
 import { useT, useI18n } from "@/lib/i18n";
 import { regionLabel, formatAddressLine, formatAddressDetailed, type StructuredAddress } from "@/lib/bahrain-regions";
 import { printThermalReceipt } from "@/lib/thermal-print";
+import { derivePaymentStatus, PAYMENT_BADGE_CLASSES, PAYMENT_BADGE_LABEL, type PaymentBadge } from "@/lib/payment-status";
 
 function formatDeliveryAddress(
   c: { region?: string | null; road?: string | null; house?: string | null; flat?: string | null; address?: string | null; city?: string | null } | null | undefined,
@@ -135,8 +136,15 @@ function OrderDetail() {
     const taxable = Math.max(0, subtotal - discount);
     const taxAmount = taxable * Number(order?.tax_rate ?? 0) / 100;
     const total = taxable + taxAmount + shipping;
-    return { subtotal, discount, shipping, taxAmount, total };
-  }, [items, order?.discount, order?.shipping, order?.tax_rate]);
+    const advancePaid = Math.max(0, Number(order?.advance_paid ?? 0));
+    const remaining = Math.max(0, total - advancePaid);
+    return { subtotal, discount, shipping, taxAmount, total, advancePaid, remaining };
+  }, [items, order?.discount, order?.shipping, order?.tax_rate, order?.advance_paid]);
+
+  const paymentBadge: PaymentBadge = useMemo(
+    () => derivePaymentStatus(order?.status, totals.total, totals.advancePaid),
+    [order?.status, totals.total, totals.advancePaid],
+  );
 
   if (!order || !settingsQ.data) return <div className="p-8">Loading…</div>;
 
@@ -211,6 +219,7 @@ function OrderDetail() {
       payment_method: order.payment_method ?? null,
       discount: totals.discount, tax_rate: order.tax_rate, tax_amount: totals.taxAmount,
       shipping: totals.shipping, subtotal: totals.subtotal, total: totals.total,
+      advance_paid: totals.advancePaid,
       currency, order_date: order.order_date,
     }).eq("id", order.id);
     if (oe) return toast.error(oe.message);
@@ -559,15 +568,41 @@ function OrderDetail() {
               </div>
               <div><Label>{t("orderDetail.taxRate")}</Label>
                 <Input type="number" step="0.01" value={order.tax_rate} onChange={(e) => setOrder({ ...order, tax_rate: Number(e.target.value) })} /></div>
+              <div>
+                <Label>{t("orderDetail.advancePaid")}</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  min={0}
+                  value={order.advance_paid ?? 0}
+                  onChange={(e) => setOrder({ ...order, advance_paid: Number(e.target.value) })}
+                />
+              </div>
               <div className="border-t border-border pt-3 space-y-1 text-sm">
                 <Row label={t("orderDetail.subtotal")} value={formatMoney(totals.subtotal, currency)} />
                 <Row label={t("orderDetail.discount")} value={`− ${formatMoney(totals.discount, currency)}`} />
                 <Row label={`${t("orderDetail.vat")} (${order.tax_rate}%)`} value={formatMoney(totals.taxAmount, currency)} />
                 <Row label={t("orderDetail.shipping")} value={formatMoney(totals.shipping, currency)} />
-                <div className="flex justify-between pt-2 border-t border-border">
+                <div className="flex justify-between items-center pt-2 border-t border-border">
                   <span className="font-display text-lg">{t("orderDetail.total")}</span>
-                  <span className="font-display text-lg">{formatMoney(totals.total, currency)}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-display text-lg">{formatMoney(totals.total, currency)}</span>
+                    <span
+                      className={`text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full border ${PAYMENT_BADGE_CLASSES[paymentBadge]}`}
+                    >
+                      {t(`payStatus.${paymentBadge}`)}
+                    </span>
+                  </div>
                 </div>
+                {totals.advancePaid > 0 && (
+                  <>
+                    <Row label={t("orderDetail.advancePaid")} value={`− ${formatMoney(totals.advancePaid, currency)}`} />
+                    <div className="flex justify-between pt-1 font-medium">
+                      <span>{t("orderDetail.remaining")}</span>
+                      <span>{formatMoney(totals.remaining, currency)}</span>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -582,10 +617,11 @@ function OrderDetail() {
           ?? null;
         return (
       <InvoicePreview
-        order={{ ...order, subtotal: totals.subtotal, tax_amount: totals.taxAmount, total: totals.total }}
+        order={{ ...order, subtotal: totals.subtotal, tax_amount: totals.taxAmount, total: totals.total, advance_paid: totals.advancePaid }}
         items={items}
         settings={settingsQ.data}
         shippingAddress={chosen}
+        paymentBadge={paymentBadge}
       />
         );
       })()}
@@ -666,7 +702,7 @@ function toArabicDigits(str: string) {
   return str.replace(/[0-9]/g, (d) => map[+d]);
 }
 
-function InvoicePreview({ order, items, settings, shippingAddress }: { order: any; items: Item[]; settings: any; shippingAddress?: SavedAddress | null }) {
+function InvoicePreview({ order, items, settings, shippingAddress, paymentBadge }: { order: any; items: Item[]; settings: any; shippingAddress?: SavedAddress | null; paymentBadge?: PaymentBadge }) {
   const currency = order.currency;
   const color = settings.primary_color || "#8b6f47";
   const bg = settings.background_color || "#ffffff";
@@ -847,10 +883,36 @@ function InvoicePreview({ order, items, settings, shippingAddress }: { order: an
               {Number(order.discount) > 0 && <div className="flex justify-between"><span className="text-neutral-600">{L.discount}</span><span>− {money(order.discount)}</span></div>}
               {Number(order.tax_rate) > 0 && <div className="flex justify-between"><span className="text-neutral-600">{L.vat} ({num(order.tax_rate)}%)</span><span>{money(order.tax_amount)}</span></div>}
               {Number(order.shipping) > 0 && <div className="flex justify-between"><span className="text-neutral-600">{L.shipping}</span><span>{money(order.shipping)}</span></div>}
-              <div className="flex justify-between pt-2 border-t-2" style={{ borderColor: color }}>
-                <span className="font-display text-lg" style={{ color }}>{L.grandTotal}</span>
-                <span className="font-display text-lg" style={{ color }}>{money(order.total)}</span>
+              <div className="flex justify-between items-center pt-2 border-t-2" style={{ borderColor: color }}>
+                <span className="font-display text-lg" style={{ color }}>
+                  {invoiceLang === "ar" ? "المبلغ الإجمالي" : "Total Amount"}
+                </span>
+                <div className="flex items-center gap-2">
+                  <span className="font-display text-lg" style={{ color }}>{money(order.total)}</span>
+                  {paymentBadge && (
+                    <span className={`text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full border ${PAYMENT_BADGE_CLASSES[paymentBadge]}`}>
+                      {PAYMENT_BADGE_LABEL[paymentBadge][invoiceLang]}
+                    </span>
+                  )}
+                </div>
               </div>
+              {Number(order.advance_paid) > 0 && (
+                <>
+                  <div className="flex justify-between pt-1">
+                    <span className="text-neutral-600">
+                      {invoiceLang === "ar" ? "المبلغ المقدم المدفوع" : "Advance Paid"}
+                    </span>
+                    <span>− {money(order.advance_paid)}</span>
+                  </div>
+                  <div
+                    className="flex justify-between items-center rounded-md px-2 py-1 mt-1 font-semibold"
+                    style={{ backgroundColor: `${color}1a`, color }}
+                  >
+                    <span>{invoiceLang === "ar" ? "المتبقي للاستحقاق" : "Remaining Due"}</span>
+                    <span>{money(Math.max(0, Number(order.total) - Number(order.advance_paid)))}</span>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
