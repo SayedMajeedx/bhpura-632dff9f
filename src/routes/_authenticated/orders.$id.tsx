@@ -173,13 +173,41 @@ function OrderDetail() {
     updateItem(idx, { customizations: newCust });
   };
 
+  const DEDUCTING = new Set(["confirmed", "paid", "shipped", "completed"]);
+
   const save = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
+    // Stock precheck when order will be in a deducting state.
+    if (DEDUCTING.has(order.status)) {
+      const variants = variantsQ.data ?? [];
+      const wasDeducted = !!(orderQ.data as any)?.stock_deducted;
+      const priorItems = wasDeducted ? ((orderQ.data as any)?.order_items ?? []) : [];
+      const prevByVariant = new Map<string, number>();
+      for (const p of priorItems as any[]) {
+        if (!p.variant_id) continue;
+        prevByVariant.set(p.variant_id, (prevByVariant.get(p.variant_id) ?? 0) + Number(p.quantity));
+      }
+      const wantByVariant = new Map<string, number>();
+      for (const it of items) {
+        if (!it.variant_id) continue;
+        wantByVariant.set(it.variant_id, (wantByVariant.get(it.variant_id) ?? 0) + Number(it.quantity));
+      }
+      for (const [vid, want] of wantByVariant) {
+        const v = variants.find((x: any) => x.id === vid);
+        if (!v) continue;
+        const available = Number(v.stock) + (prevByVariant.get(vid) ?? 0);
+        if (want > available) {
+          return toast.error(t("orderDetail.insufficientStock"));
+        }
+      }
+    }
+
     const { error: oe } = await supabase.from("orders").update({
       customer_id: order.customer_id, status: order.status, notes: order.notes,
       shipping_address_id: order.shipping_address_id ?? null,
+      payment_method: order.payment_method ?? null,
       discount: totals.discount, tax_rate: order.tax_rate, tax_amount: totals.taxAmount,
       shipping: totals.shipping, subtotal: totals.subtotal, total: totals.total,
       currency, order_date: order.order_date,
@@ -198,10 +226,26 @@ function OrderDetail() {
       );
       if (ie) return toast.error(ie.message);
     }
+
+    // Sync inventory (deduct or restore based on status).
+    const { error: se } = await supabase.rpc("sync_order_stock", { p_order_id: order.id });
+    if (se) {
+      if (se.message?.includes("INSUFFICIENT_STOCK")) {
+        toast.error(t("orderDetail.insufficientStock"));
+      } else {
+        toast.error(se.message);
+      }
+      // Continue to invalidate — items may already be saved. User can adjust.
+    } else if (DEDUCTING.has(order.status) || (orderQ.data as any)?.stock_deducted) {
+      toast.success(t("orderDetail.stockUpdated"));
+    }
+
     toast.success("Saved");
     qc.invalidateQueries({ queryKey: ["order", id] });
     qc.invalidateQueries({ queryKey: ["orders"] });
+    qc.invalidateQueries({ queryKey: ["variants"] });
   };
+
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto">
@@ -246,7 +290,7 @@ function OrderDetail() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             <div>
-              <Label>Customer</Label>
+              <Label>{t("orderDetail.customer")}</Label>
               <Select value={order.customer_id ?? "none"} onValueChange={(v) => {
                 const cid = v === "none" ? null : v;
                 const def = cid ? (addressesQ.data ?? []).find((a) => a.customer_id === cid && a.is_default)
@@ -255,7 +299,7 @@ function OrderDetail() {
               }}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">— No customer —</SelectItem>
+                  <SelectItem value="none">{t("orderDetail.noCustomerOption")}</SelectItem>
                   {(customersQ.data ?? []).map((c: any) => (
                     <SelectItem key={c.id} value={c.id}>{c.name}{c.phone ? ` — ${c.phone}` : ""}</SelectItem>
                   ))}
@@ -263,20 +307,39 @@ function OrderDetail() {
               </Select>
             </div>
             <div>
-              <Label>Order date</Label>
+              <Label>{t("orderDetail.orderDate")}</Label>
               <Input type="date" value={order.order_date} onChange={(e) => setOrder({ ...order, order_date: e.target.value })} />
             </div>
             <div>
-              <Label>Status</Label>
+              <Label>{t("orderDetail.status")}</Label>
               <Select value={order.status} onValueChange={(v) => setOrder({ ...order, status: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="draft">Draft</SelectItem>
-                  <SelectItem value="confirmed">Confirmed</SelectItem>
-                  <SelectItem value="paid">Paid</SelectItem>
-                  <SelectItem value="shipped">Shipped</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                  <SelectItem value="draft">{t("status.draft")}</SelectItem>
+                  <SelectItem value="confirmed">{t("status.confirmed")}</SelectItem>
+                  <SelectItem value="paid">{t("status.paid")}</SelectItem>
+                  <SelectItem value="shipped">{t("status.shipped")}</SelectItem>
+                  <SelectItem value="completed">{t("status.completed")}</SelectItem>
+                  <SelectItem value="cancelled">{t("status.cancelled")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>{t("orderDetail.paymentMethod")}</Label>
+              <Select
+                value={order.payment_method ?? "none"}
+                onValueChange={(v) => setOrder({ ...order, payment_method: v === "none" ? null : v })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">{t("orderDetail.selectPayment")}</SelectItem>
+                  <SelectItem value="cash">{t("payment.cash")}</SelectItem>
+                  <SelectItem value="card">{t("payment.card")}</SelectItem>
+                  <SelectItem value="bank_transfer">{t("payment.bank_transfer")}</SelectItem>
+                  <SelectItem value="benefit">{t("payment.benefit")}</SelectItem>
+                  <SelectItem value="apple_pay">{t("payment.apple_pay")}</SelectItem>
+                  <SelectItem value="google_pay">{t("payment.google_pay")}</SelectItem>
+                  <SelectItem value="cod">{t("payment.cod")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -333,20 +396,20 @@ function OrderDetail() {
 
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-display text-lg">Line items</h3>
-            <Button size="sm" variant="outline" onClick={addItem}><Plus className="h-3 w-3 mr-1" /> Add line</Button>
+            <h3 className="font-display text-lg">{t("orderDetail.lineItems")}</h3>
+            <Button size="sm" variant="outline" onClick={addItem}><Plus className="h-3 w-3 mr-1" /> {t("orderDetail.addLine")}</Button>
           </div>
-          {items.length === 0 && <p className="text-sm text-muted-foreground">No lines. Add products from your inventory.</p>}
+          {items.length === 0 && <p className="text-sm text-muted-foreground">{t("orderDetail.noLines")}</p>}
           <div className="space-y-4">
             {items.map((it, idx) => (
               <div key={idx} className="border border-border rounded-lg p-4 space-y-3">
                 <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
                   <div className="sm:col-span-5">
-                    <Label>From inventory</Label>
+                    <Label>{t("orderDetail.fromInventory")}</Label>
                     <Select value={it.variant_id ?? "custom"} onValueChange={(v) => v !== "custom" && pickVariant(idx, v)}>
-                      <SelectTrigger><SelectValue placeholder="Pick a variant..." /></SelectTrigger>
+                      <SelectTrigger><SelectValue placeholder={t("orderDetail.pickVariant")} /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="custom">— Custom line —</SelectItem>
+                        <SelectItem value="custom">{t("orderDetail.customLine")}</SelectItem>
                         {(variantsQ.data ?? []).map((v: any) => {
                           const p = productsQ.data?.find((x: any) => x.id === v.product_id);
                           if (!p) return null;
@@ -360,16 +423,16 @@ function OrderDetail() {
                     </Select>
                   </div>
                   <div className="sm:col-span-4">
-                    <Label>Description</Label>
+                    <Label>{t("orderDetail.description")}</Label>
                     <Input value={it.description} onChange={(e) => updateItem(idx, { description: e.target.value })} />
                   </div>
-                  <div className="sm:col-span-1"><Label>Qty</Label>
+                  <div className="sm:col-span-1"><Label>{t("orderDetail.qty")}</Label>
                     <Input type="number" min={1} value={it.quantity} onChange={(e) => updateItem(idx, { quantity: Number(e.target.value) })} /></div>
-                  <div className="sm:col-span-2"><Label>Unit price</Label>
+                  <div className="sm:col-span-2"><Label>{t("orderDetail.unitPrice")}</Label>
                     <Input type="number" step="0.01" value={it.unit_price} onChange={(e) => updateItem(idx, { unit_price: Number(e.target.value) })} /></div>
                 </div>
                 <div>
-                  <Label className="text-xs">Customizations</Label>
+                  <Label className="text-xs">{t("orderDetail.customizations")}</Label>
                   <div className="flex flex-wrap gap-2 mt-1">
                     {(customQ.data ?? []).map((c: any) => {
                       const active = it.customizations.some((x) => x.name === c.name);
@@ -381,11 +444,11 @@ function OrderDetail() {
                         </button>
                       );
                     })}
-                    {(customQ.data ?? []).length === 0 && <span className="text-xs text-muted-foreground">Add options in Inventory → Customization add-ons.</span>}
+                    {(customQ.data ?? []).length === 0 && <span className="text-xs text-muted-foreground">{t("orderDetail.addonsHint")}</span>}
                   </div>
                 </div>
                 <div className="flex items-center justify-between pt-2 border-t border-border">
-                  <span className="text-sm text-muted-foreground">Line total</span>
+                  <span className="text-sm text-muted-foreground">{t("orderDetail.lineTotal")}</span>
                   <div className="flex items-center gap-3">
                     <span className="font-medium">{formatMoney(it.line_total, currency)}</span>
                     <Button variant="ghost" size="icon" onClick={() => setItems(items.filter((_, i) => i !== idx))}>
@@ -401,25 +464,25 @@ function OrderDetail() {
         <Card className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <Label>Notes</Label>
+              <Label>{t("orderDetail.notes")}</Label>
               <Textarea value={order.notes ?? ""} onChange={(e) => setOrder({ ...order, notes: e.target.value })} rows={5} />
             </div>
             <div className="space-y-3">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div><Label>Discount</Label>
+                <div><Label>{t("orderDetail.discount")}</Label>
                   <Input type="number" step="0.01" value={order.discount} onChange={(e) => setOrder({ ...order, discount: Number(e.target.value) })} /></div>
-                <div><Label>Shipping</Label>
+                <div><Label>{t("orderDetail.shipping")}</Label>
                   <Input type="number" step="0.01" value={order.shipping} onChange={(e) => setOrder({ ...order, shipping: Number(e.target.value) })} /></div>
               </div>
-              <div><Label>Tax rate (%)</Label>
+              <div><Label>{t("orderDetail.taxRate")}</Label>
                 <Input type="number" step="0.01" value={order.tax_rate} onChange={(e) => setOrder({ ...order, tax_rate: Number(e.target.value) })} /></div>
               <div className="border-t border-border pt-3 space-y-1 text-sm">
-                <Row label="Subtotal" value={formatMoney(totals.subtotal, currency)} />
-                <Row label={`Discount`} value={`− ${formatMoney(totals.discount, currency)}`} />
-                <Row label={`VAT (${order.tax_rate}%)`} value={formatMoney(totals.taxAmount, currency)} />
-                <Row label="Shipping" value={formatMoney(totals.shipping, currency)} />
+                <Row label={t("orderDetail.subtotal")} value={formatMoney(totals.subtotal, currency)} />
+                <Row label={t("orderDetail.discount")} value={`− ${formatMoney(totals.discount, currency)}`} />
+                <Row label={`${t("orderDetail.vat")} (${order.tax_rate}%)`} value={formatMoney(totals.taxAmount, currency)} />
+                <Row label={t("orderDetail.shipping")} value={formatMoney(totals.shipping, currency)} />
                 <div className="flex justify-between pt-2 border-t border-border">
-                  <span className="font-display text-lg">Total</span>
+                  <span className="font-display text-lg">{t("orderDetail.total")}</span>
                   <span className="font-display text-lg">{formatMoney(totals.total, currency)}</span>
                 </div>
               </div>
@@ -744,6 +807,7 @@ Warm regards,
 }
 
 function SendInvoiceDialog({ order, totals, settings, currency }: { order: any; totals: any; settings: any; currency: string }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [manageOpen, setManageOpen] = useState(false);
   const qc = useQueryClient();
@@ -810,11 +874,11 @@ function SendInvoiceDialog({ order, totals, settings, currency }: { order: any; 
     <>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <Button variant="outline"><Send className="h-4 w-4 mr-2" /> Send invoice</Button>
+          <Button variant="outline"><Send className="h-4 w-4 mr-2" /> {t("orderDetail.sendInvoice")}</Button>
         </DialogTrigger>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Send invoice</DialogTitle>
+            <DialogTitle>{t("orderDetail.sendInvoice")}</DialogTitle>
             <DialogDescription>Pick a template, tweak the message, then send via email or WhatsApp.</DialogDescription>
           </DialogHeader>
 

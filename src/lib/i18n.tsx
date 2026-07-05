@@ -189,6 +189,25 @@ const en: Dict = {
   "status.shipped": "Shipped",
   "status.completed": "Completed",
   "status.cancelled": "Cancelled",
+
+  "orderDetail.customer": "Customer",
+  "orderDetail.noCustomerOption": "— No customer —",
+  "orderDetail.status": "Status",
+  "orderDetail.paymentMethod": "Payment method",
+  "orderDetail.selectPayment": "— Select payment —",
+  "orderDetail.vat": "VAT",
+  "orderDetail.grandTotal": "Grand Total",
+  "orderDetail.addonsHint": "Add options in Inventory → Customization add-ons.",
+  "orderDetail.insufficientStock": "Insufficient stock for one or more items. Adjust quantities or restock before confirming.",
+  "orderDetail.stockUpdated": "Inventory updated",
+
+  "payment.cash": "Cash",
+  "payment.card": "Card",
+  "payment.bank_transfer": "Bank transfer",
+  "payment.benefit": "Benefit",
+  "payment.apple_pay": "Apple Pay",
+  "payment.google_pay": "Google Pay",
+  "payment.cod": "Cash on delivery",
 };
 
 const ar: Dict = {
@@ -376,6 +395,25 @@ const ar: Dict = {
   "status.shipped": "تم الشحن",
   "status.completed": "مكتمل",
   "status.cancelled": "ملغى",
+
+  "orderDetail.customer": "العميلة",
+  "orderDetail.noCustomerOption": "— بدون عميلة —",
+  "orderDetail.status": "الحالة",
+  "orderDetail.paymentMethod": "طريقة الدفع",
+  "orderDetail.selectPayment": "— اختاري طريقة الدفع —",
+  "orderDetail.vat": "ضريبة القيمة المضافة",
+  "orderDetail.grandTotal": "الإجمالي الكلي",
+  "orderDetail.addonsHint": "أضيفي الخيارات من المخزون ← إضافات التخصيص.",
+  "orderDetail.insufficientStock": "المخزون غير كافٍ لأحد البنود. عدّلي الكميات أو أعيدي التخزين قبل التأكيد.",
+  "orderDetail.stockUpdated": "تم تحديث المخزون",
+
+  "payment.cash": "نقدًا",
+  "payment.card": "بطاقة",
+  "payment.bank_transfer": "تحويل بنكي",
+  "payment.benefit": "بنفت",
+  "payment.apple_pay": "أبل باي",
+  "payment.google_pay": "جوجل باي",
+  "payment.cod": "الدفع عند الاستلام",
 };
 
 const dicts: Record<Lang, Dict> = { en, ar };
