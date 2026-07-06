@@ -108,47 +108,68 @@ export function printLabels(labels: LabelData[]) {
 
   const styles = `
     @page { size: 50mm 30mm; margin: 0; }
-    * { box-sizing: border-box; }
+    * { box-sizing: border-box !important; }
     html, body {
-      margin: 0;
-      padding: 0;
-      background: #fff;
-      color: #000;
-      -webkit-print-color-adjust: exact;
-      print-color-adjust: exact;
+      margin: 0 !important;
+      padding: 0 !important;
+      width: 50mm !important;
+      min-width: 50mm !important;
+      max-width: 50mm !important;
+      background: #fff !important;
+      color: #000 !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      -webkit-text-size-adjust: none !important;
+      text-size-adjust: none !important;
     }
     body {
       font-family: system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
     }
     .label {
-      width: 50mm;
-      height: 30mm;
-      margin: 0;
-      padding: 5px;
-      box-sizing: border-box;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      overflow: hidden;
+      width: 50mm !important;
+      height: 30mm !important;
+      min-width: 50mm !important;
+      max-width: 50mm !important;
+      min-height: 30mm !important;
+      max-height: 30mm !important;
+      margin: 0 !important;
+      padding: 5px !important;
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      justify-content: center !important;
+      text-align: center !important;
+      overflow: hidden !important;
       page-break-after: always;
       break-after: page;
     }
     .label:last-child { page-break-after: auto; break-after: auto; }
-    .bc { line-height: 0; }
-    .bc svg { width: 44mm; height: 16mm; display: block; }
+    .bc { line-height: 0 !important; }
+    .bc svg {
+      width: 44mm !important;
+      height: 16mm !important;
+      max-width: 44mm !important;
+      display: block !important;
+    }
     .info {
-      margin-top: 1mm;
-      font-size: 7pt;
-      font-weight: 600;
-      line-height: 1.15;
-      max-width: 46mm;
+      margin-top: 1mm !important;
+      font-size: 7pt !important;
+      font-weight: 600 !important;
+      line-height: 1.15 !important;
+      max-width: 46mm !important;
       word-break: break-word;
+    }
+    @media print {
+      html, body {
+        width: 50mm !important;
+        height: 30mm !important;
+        overflow: hidden !important;
+      }
     }
   `;
 
-  const html = `<!doctype html><html><head><meta charset="utf-8" /><title>Label</title><style>${styles}</style></head><body>${labelHtml}</body></html>`;
+  const html = `<!doctype html><html><head><meta charset="utf-8" /><meta name="viewport" content="width=50mm, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no" /><title>Label</title><style>${styles}</style></head><body>${labelHtml}</body></html>`;
+
 
   // Remove any previous print iframe still in the DOM.
   document.querySelectorAll("iframe[data-print-labels]").forEach((n) => n.remove());
