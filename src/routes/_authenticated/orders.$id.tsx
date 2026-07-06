@@ -172,8 +172,13 @@ function OrderDetail() {
     cameraStreamRef.current = null;
     const promise = navigator.mediaDevices?.getUserMedia
       ? navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: "environment" } },
+        video: { facingMode: "environment" },
         audio: false,
+      }).catch((error) => {
+        if (error?.name === "OverconstrainedError" || error?.name === "NotFoundError") {
+          return navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        }
+        throw error;
       }).then((stream) => {
         cameraStreamRef.current = stream;
         return stream;
