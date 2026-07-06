@@ -129,6 +129,7 @@ function OrderDetail() {
         customizations: i.customizations ?? [],
         customization_total: Number(i.customization_total),
         line_total: Number(i.line_total),
+        location: (i.location === "incubator" ? "incubator" : "main") as "main" | "incubator",
       })));
     }
   }, [orderQ.data]);
