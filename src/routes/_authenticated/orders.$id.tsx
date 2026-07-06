@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -153,6 +153,8 @@ function OrderDetail() {
   );
 
   const [scannerOpen, setScannerOpen] = useState(false);
+  const [cameraStreamPromise, setCameraStreamPromise] = useState<Promise<MediaStream> | null>(null);
+  const cameraStreamRef = useRef<MediaStream | null>(null);
 
   if (!order || !settingsQ.data) return <div className="p-8">Loading…</div>;
 
@@ -163,6 +165,30 @@ function OrderDetail() {
       description: "", quantity: 1, unit_price: 0, customizations: [],
       customization_total: 0, line_total: 0, location: "main",
     }]);
+  };
+
+  const openBarcodeScanner = () => {
+    cameraStreamRef.current?.getTracks().forEach((track) => track.stop());
+    cameraStreamRef.current = null;
+    const promise = navigator.mediaDevices?.getUserMedia
+      ? navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" },
+        audio: false,
+      }).catch((error) => {
+        if (error?.name === "OverconstrainedError" || error?.name === "NotFoundError") {
+          return navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        }
+        throw error;
+      }).then((stream) => {
+        cameraStreamRef.current = stream;
+        return stream;
+      })
+      : Promise.reject(new Error("Camera access is not supported by this browser."));
+    void promise.catch(() => {
+      /* handled inside the scanner modal */
+    });
+    setCameraStreamPromise(promise);
+    setScannerOpen(true);
   };
 
 
@@ -633,7 +659,7 @@ function OrderDetail() {
           <div className="flex items-center justify-between mb-4 gap-2 flex-wrap">
             <h3 className="font-display text-lg">{t("orderDetail.lineItems")}</h3>
             <div className="flex items-center gap-2">
-              <Button size="sm" variant="outline" onClick={() => setScannerOpen(true)}>
+              <Button size="sm" variant="outline" onClick={openBarcodeScanner}>
                 <ScanLine className="h-3 w-3 mr-1" /> {lang === "ar" ? "مسح الباركود" : "Scan Barcode"}
               </Button>
               <Button size="sm" variant="outline" onClick={addItem}>
@@ -736,7 +762,7 @@ function OrderDetail() {
               );
             })}
           </div>
-          <BarcodeScanner open={scannerOpen} onOpenChange={setScannerOpen} onDetected={handleScanned} />
+          <BarcodeScanner open={scannerOpen} onOpenChange={setScannerOpen} onDetected={handleScanned} cameraStreamPromise={cameraStreamPromise} />
         </Card>
 
         <Card className="p-6">
