@@ -119,9 +119,36 @@ function ProductsSection({ products, variants, businessName, onChanged }: { prod
     if (error) toast.error(error.message); else { toast.success(t("common.delete")); onChanged(); }
   };
 
+  const isAr = useI18n().lang === "ar";
+
+  const printAll = () => {
+    const labels: LabelData[] = [];
+    for (const p of products) {
+      for (const v of variants.filter((x) => x.product_id === p.id)) {
+        if (!v.barcode) continue;
+        labels.push({
+          code: v.barcode,
+          productName: p.name,
+          size: v.size,
+          color: v.color,
+          price: v.selling_price,
+          businessName,
+        });
+      }
+    }
+    if (labels.length === 0) {
+      toast.error(isAr ? "لا توجد باركودات للطباعة" : "No barcodes to print");
+      return;
+    }
+    printLabels(labels);
+  };
+
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        <Button variant="outline" onClick={printAll}>
+          <Printer className="h-4 w-4 me-2" /> {isAr ? "طباعة كل الباركودات" : "Print all barcodes"}
+        </Button>
         <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setEditing(null); }}>
           <DialogTrigger asChild>
             <Button onClick={() => setEditing(null)}><Plus className="h-4 w-4 me-2" /> {t("inventory.newProduct")}</Button>
