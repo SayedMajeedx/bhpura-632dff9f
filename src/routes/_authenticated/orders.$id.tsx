@@ -628,13 +628,25 @@ function OrderDetail() {
         </Card>
 
         <Card className="p-6">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-4 gap-2 flex-wrap">
             <h3 className="font-display text-lg">{t("orderDetail.lineItems")}</h3>
-            <Button size="sm" variant="outline" onClick={addItem}><Plus className="h-3 w-3 mr-1" /> {t("orderDetail.addLine")}</Button>
+            <div className="flex items-center gap-2">
+              <Button size="sm" variant="outline" onClick={() => setScannerOpen(true)}>
+                <ScanLine className="h-3 w-3 mr-1" /> {lang === "ar" ? "مسح الباركود" : "Scan Barcode"}
+              </Button>
+              <Button size="sm" variant="outline" onClick={addItem}>
+                <Plus className="h-3 w-3 mr-1" /> {t("orderDetail.addLine")}
+              </Button>
+            </div>
           </div>
           {items.length === 0 && <p className="text-sm text-muted-foreground">{t("orderDetail.noLines")}</p>}
           <div className="space-y-4">
-            {items.map((it, idx) => (
+            {items.map((it, idx) => {
+              const variant = it.variant_id ? (variantsQ.data ?? []).find((x: any) => x.id === it.variant_id) : null;
+              const mainStock = Number((variant as any)?.stock_main ?? 0);
+              const incStock = Number((variant as any)?.stock_incubator ?? 0);
+              const isAr = lang === "ar";
+              return (
               <div key={idx} className="border border-border rounded-lg p-4 space-y-3">
                 <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
                   <div className="sm:col-span-4">
@@ -664,6 +676,35 @@ function OrderDetail() {
                   <div className="sm:col-span-3"><Label>{t("orderDetail.unitPrice")}</Label>
                     <Input type="number" step="0.01" value={it.unit_price} onChange={(e) => updateItem(idx, { unit_price: Number(e.target.value) })} /></div>
                 </div>
+
+                {it.variant_id && (
+                  <div>
+                    <Label className="text-xs">{isAr ? "الموقع (خصم من)" : "Location (deduct from)"}</Label>
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      {([
+                        { key: "main", en: `Direct Sales · Main (${mainStock})`, ar: `الرئيسي (${mainStock})` },
+                        { key: "incubator", en: `Incubator (${incStock})`, ar: `الحاضنة (${incStock})` },
+                      ] as const).map((opt) => {
+                        const active = it.location === opt.key;
+                        return (
+                          <button
+                            key={opt.key}
+                            type="button"
+                            onClick={() => updateItem(idx, { location: opt.key })}
+                            className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                              active
+                                ? "bg-primary text-primary-foreground border-primary"
+                                : "border-border hover:bg-secondary"
+                            }`}
+                          >
+                            {isAr ? opt.ar : opt.en}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 <div>
                   <Label className="text-xs">{t("orderDetail.customizations")}</Label>
                   <div className="flex flex-wrap gap-2 mt-1">
@@ -690,8 +731,10 @@ function OrderDetail() {
                   </div>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
+          <BarcodeScanner open={scannerOpen} onOpenChange={setScannerOpen} onDetected={handleScanned} />
         </Card>
 
         <Card className="p-6">
