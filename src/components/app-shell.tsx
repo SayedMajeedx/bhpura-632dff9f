@@ -1,5 +1,5 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, Package, Users, ReceiptText, Settings, LogOut, Languages, Menu, Wallet } from "lucide-react";
+import { LayoutDashboard, Package, Users, ReceiptText, Settings, LogOut, Languages, Menu, Wallet, Megaphone } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
@@ -21,6 +21,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     { to: "/dashboard", label: t("nav.dashboard"), icon: LayoutDashboard },
     { to: "/inventory", label: t("nav.inventory"), icon: Package },
     { to: "/customers", label: t("nav.customers"), icon: Users },
+    { to: "/campaigns", label: lang === "ar" ? "حملات الواتساب" : "WhatsApp Campaigns", icon: Megaphone },
     { to: "/orders", label: t("nav.orders"), icon: ReceiptText },
     { to: "/expenses", label: t("nav.expenses"), icon: Wallet },
     { to: "/settings", label: t("nav.settings"), icon: Settings },
