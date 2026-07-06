@@ -295,7 +295,11 @@ export function PrintLabelButton({
       variant="ghost"
       size="sm"
       className="h-7 px-2"
-      onClick={() => printLabels([data])}
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        printLabels([data]);
+      }}
       title={label ?? "Print"}
     >
       <Printer className="h-3 w-3" />
