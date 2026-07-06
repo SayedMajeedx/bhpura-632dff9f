@@ -141,8 +141,8 @@ function ProductsSection({ products, variants, businessName, onChanged }: { prod
       return;
     }
 
-    const printableProducts = (freshProducts?.length ? freshProducts : products) as Pick<Product, "id" | "name">[];
-    const printableVariants = (freshVariants?.length ? freshVariants : variants) as Pick<Variant, "product_id" | "barcode" | "size" | "color" | "selling_price">[];
+    const printableProducts = (freshProducts ?? products) as Pick<Product, "id" | "name">[];
+    const printableVariants = (freshVariants ?? variants) as Pick<Variant, "product_id" | "barcode" | "size" | "color" | "selling_price">[];
 
     for (const p of printableProducts) {
       for (const v of printableVariants.filter((x) => x.product_id === p.id)) {
