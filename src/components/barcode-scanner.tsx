@@ -212,6 +212,7 @@ export function BarcodeScanner({ open, onOpenChange, onDetected, cameraStreamPro
 
   const handleFile = async (file: File) => {
     setError(null);
+    stoppedRef.current = true;
     const stream = streamRef.current;
     streamRef.current = null;
     stream?.getTracks().forEach((track) => track.stop());
