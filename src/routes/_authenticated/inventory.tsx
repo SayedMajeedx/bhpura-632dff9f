@@ -8,11 +8,12 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
-import { Plus, Pencil, Trash2, Package, TrendingUp, Wand2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Package, TrendingUp, Wand2, Printer } from "lucide-react";
 import { toast } from "sonner";
 import { formatMoney } from "@/lib/format";
 import { useT, useI18n } from "@/lib/i18n";
 import { ActivityLogList } from "@/components/activity-log-list";
+import { BarcodeSvg, PrintLabelButton, printLabels, type LabelData } from "@/components/barcode-label";
 
 export const Route = createFileRoute("/_authenticated/inventory")({
   component: Inventory,
@@ -58,6 +59,14 @@ function Inventory() {
     },
   });
 
+  const businessName = useQuery({
+    queryKey: ["business-name"],
+    queryFn: async () => {
+      const { data } = await supabase.from("business_settings").select("business_name").maybeSingle();
+      return data?.business_name ?? null;
+    },
+  });
+
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
       <div className="mb-6 flex items-center justify-between">
@@ -82,6 +91,7 @@ function Inventory() {
         <ProductsSection
           products={products.data ?? []}
           variants={variants.data ?? []}
+          businessName={businessName.data ?? null}
           onChanged={() => { qc.invalidateQueries({ queryKey: ["products"] }); qc.invalidateQueries({ queryKey: ["variants"] }); }}
         />
       ) : (
@@ -98,7 +108,7 @@ function Inventory() {
   );
 }
 
-function ProductsSection({ products, variants, onChanged }: { products: Product[]; variants: Variant[]; onChanged: () => void }) {
+function ProductsSection({ products, variants, businessName, onChanged }: { products: Product[]; variants: Variant[]; businessName: string | null; onChanged: () => void }) {
   const t = useT();
   const [editing, setEditing] = useState<Product | null>(null);
   const [open, setOpen] = useState(false);
@@ -109,9 +119,36 @@ function ProductsSection({ products, variants, onChanged }: { products: Product[
     if (error) toast.error(error.message); else { toast.success(t("common.delete")); onChanged(); }
   };
 
+  const isAr = useI18n().lang === "ar";
+
+  const printAll = () => {
+    const labels: LabelData[] = [];
+    for (const p of products) {
+      for (const v of variants.filter((x) => x.product_id === p.id)) {
+        if (!v.barcode) continue;
+        labels.push({
+          code: v.barcode,
+          productName: p.name,
+          size: v.size,
+          color: v.color,
+          price: v.selling_price,
+          businessName,
+        });
+      }
+    }
+    if (labels.length === 0) {
+      toast.error(isAr ? "لا توجد باركودات للطباعة" : "No barcodes to print");
+      return;
+    }
+    printLabels(labels);
+  };
+
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        <Button variant="outline" onClick={printAll}>
+          <Printer className="h-4 w-4 me-2" /> {isAr ? "طباعة كل الباركودات" : "Print all barcodes"}
+        </Button>
         <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setEditing(null); }}>
           <DialogTrigger asChild>
             <Button onClick={() => setEditing(null)}><Plus className="h-4 w-4 me-2" /> {t("inventory.newProduct")}</Button>
@@ -156,7 +193,7 @@ function ProductsSection({ products, variants, onChanged }: { products: Product[
                   </div>
                 </div>
 
-                <VariantList productId={p.id} variants={pVariants} onChanged={onChanged} />
+                <VariantList productId={p.id} productName={p.name} businessName={businessName} variants={pVariants} onChanged={onChanged} />
               </Card>
             );
           })}
@@ -201,7 +238,7 @@ function ProductDialog({ product, onSaved }: { product: Product | null; onSaved:
   );
 }
 
-function VariantList({ productId, variants, onChanged }: { productId: string; variants: Variant[]; onChanged: () => void }) {
+function VariantList({ productId, productName, businessName, variants, onChanged }: { productId: string; productName: string; businessName: string | null; variants: Variant[]; onChanged: () => void }) {
   const t = useT();
   const { lang } = useI18n();
   const isAr = lang === "ar";
@@ -276,21 +313,41 @@ function VariantList({ productId, variants, onChanged }: { productId: string; va
                   <td className="py-2 pe-3 text-start"><input className="bg-transparent w-20 outline-none text-start" defaultValue={v.fabric ?? ""} onBlur={(e) => update(v, { fabric: e.target.value || null })} /></td>
                   <td className="py-2 pe-3 text-start"><input className="bg-transparent w-24 outline-none text-start" defaultValue={v.sku ?? ""} onBlur={(e) => update(v, { sku: e.target.value || null })} /></td>
                   <td className="py-2 pe-3 text-start">
-                    <div className="inline-flex items-center gap-1">
-                      <input
-                        className="bg-transparent w-28 outline-none text-start font-mono text-xs"
-                        placeholder={isAr ? "بدون" : "None"}
-                        defaultValue={v.barcode ?? ""}
-                        onBlur={(e) => update(v, { barcode: e.target.value.trim() || null })}
-                      />
-                      <button
-                        type="button"
-                        title={isAr ? "توليد باركود" : "Generate barcode"}
-                        className="text-muted-foreground hover:text-primary"
-                        onClick={() => update(v, { barcode: genBarcode() })}
-                      >
-                        <Wand2 className="h-3 w-3" />
-                      </button>
+                    <div className="flex flex-col gap-1">
+                      <div className="inline-flex items-center gap-1">
+                        <input
+                          className="bg-transparent w-28 outline-none text-start font-mono text-xs"
+                          placeholder={isAr ? "بدون" : "None"}
+                          defaultValue={v.barcode ?? ""}
+                          onBlur={(e) => update(v, { barcode: e.target.value.trim() || null })}
+                        />
+                        <button
+                          type="button"
+                          title={isAr ? "توليد باركود" : "Generate barcode"}
+                          className="text-muted-foreground hover:text-primary"
+                          onClick={() => update(v, { barcode: genBarcode() })}
+                        >
+                          <Wand2 className="h-3 w-3" />
+                        </button>
+                        {v.barcode && (
+                          <PrintLabelButton
+                            label={isAr ? "طباعة" : "Print"}
+                            data={{
+                              code: v.barcode,
+                              productName,
+                              size: v.size,
+                              color: v.color,
+                              price: v.selling_price,
+                              businessName,
+                            }}
+                          />
+                        )}
+                      </div>
+                      {v.barcode && (
+                        <div className="rounded bg-white p-1 inline-block w-fit">
+                          <BarcodeSvg value={v.barcode} height={32} width={1.2} fontSize={10} margin={0} />
+                        </div>
+                      )}
                     </div>
                   </td>
                   <td className="py-2 pe-3 text-start"><input type="number" step="0.01" className="bg-transparent w-20 outline-none text-start" defaultValue={v.cost_price} onBlur={(e) => update(v, { cost_price: Number(e.target.value) })} /></td>
