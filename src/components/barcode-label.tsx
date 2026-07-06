@@ -51,6 +51,19 @@ export type LabelData = {
   businessName?: string | null;
 };
 
+export function openLabelPrintWindow() {
+  const printWindow = window.open("", "_blank");
+  if (!printWindow) {
+    window.alert("Please allow pop-ups to print barcode labels.");
+    return null;
+  }
+
+  printWindow.document.open();
+  printWindow.document.write(`<!doctype html><html><head><meta charset="utf-8" /><meta name="viewport" content="width=800, initial-scale=1" /><title>Preparing labels</title></head><body style="margin:0;font-family:system-ui,sans-serif;color:#000;background:#fff;">Preparing barcode labels...</body></html>`);
+  printWindow.document.close();
+  return printWindow;
+}
+
 export function PrintableLabel({ data }: { data: LabelData }) {
   const meta = [data.size, data.color].filter(Boolean).join(" · ");
   return (
@@ -71,14 +84,11 @@ export function PrintableLabel({ data }: { data: LabelData }) {
  * browsers such as Brave block background iframe printing, so this flow writes
  * a clean standalone document and prints only the 50mm × 30mm labels.
  */
-export function printLabels(labels: LabelData[]) {
+export function printLabels(labels: LabelData[], targetWindow?: Window | null) {
   if (!labels.length) return;
 
-  const printWindow = window.open("", "_blank");
-  if (!printWindow) {
-    window.alert("Please allow pop-ups to print barcode labels.");
-    return;
-  }
+  const printWindow = targetWindow ?? openLabelPrintWindow();
+  if (!printWindow) return;
 
   // Render barcodes off-DOM as SVG strings using a temp svg element in the current doc.
   const svgs = labels.map((l) => {
@@ -145,7 +155,6 @@ export function printLabels(labels: LabelData[]) {
       page-break-after: always !important;
       break-after: page !important;
     }
-    .barcode-card:last-child { page-break-after: auto !important; break-after: auto !important; }
     .barcode-image {
       width: 40mm !important;
       height: auto !important;
@@ -172,8 +181,6 @@ export function printLabels(labels: LabelData[]) {
       body { margin: 0 !important; padding: 0 !important; }
       html, body {
         width: 50mm !important;
-        height: 30mm !important;
-        overflow: hidden !important;
       }
       .barcode-card {
         width: 50mm !important;
