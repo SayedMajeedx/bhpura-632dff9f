@@ -193,7 +193,7 @@ function ProductsSection({ products, variants, businessName, onChanged }: { prod
                   </div>
                 </div>
 
-                <VariantList productId={p.id} variants={pVariants} onChanged={onChanged} />
+                <VariantList productId={p.id} productName={p.name} businessName={businessName} variants={pVariants} onChanged={onChanged} />
               </Card>
             );
           })}
