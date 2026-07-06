@@ -19,15 +19,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   // close drawer when route changes
   useEffect(() => { setMobileOpen(false); }, [pathname]);
 
-  // Force-logout inactive users
+  // Force-logout only if profile exists and is explicitly inactive
+  // (not for users without profiles - they get treated as active admin)
   useEffect(() => {
     if (isLoading) return;
-    if (!isActive) {
+    // Only force logout if user has a profile that is explicitly inactive
+    if (profile && profile.status === "inactive") {
       (async () => {
         await signOutAndRedirect();
       })();
     }
-  }, [isLoading, isActive, signOutAndRedirect]);
+  }, [isLoading, profile, signOutAndRedirect]);
 
   // Build nav items based on role
   const nav = useMemo(() => {

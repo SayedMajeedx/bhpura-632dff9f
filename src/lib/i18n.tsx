@@ -57,6 +57,8 @@ const en: Dict = {
   "auth.passwordTooShort": "Password must be at least 8 characters.",
   "auth.invalidEmail": "Please enter a valid email address.",
   "auth.invalidRecoveryLink": "Invalid or expired recovery link.",
+  "auth.networkError": "Network error. Please check your connection.",
+  "auth.sessionError": "Session error. Please try again.",
 
   "dashboard.title": "Dashboard",
   "dashboard.subtitle": "",
@@ -366,6 +368,8 @@ const ar: Dict = {
   "auth.passwordTooShort": "يجب أن تحتوي كلمة المرور على 8 أحرف على الأقل.",
   "auth.invalidEmail": "الرجاء إدخال بريد إلكتروني صحيح.",
   "auth.invalidRecoveryLink": "رابط الاستعادة غير صالح أو منتهي الصلاحية.",
+  "auth.networkError": "خطأ في الاتصال. يرجى التحقق من اتصالك بالإنترنت.",
+  "auth.sessionError": "خطأ في الجلسة. يرجى المحاولة مرة أخرى.",
 
   "dashboard.title": "لوحة التحكم",
   "dashboard.subtitle": "",

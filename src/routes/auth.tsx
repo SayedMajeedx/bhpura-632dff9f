@@ -43,9 +43,20 @@ function AuthPage() {
         if (error) throw error;
         applyRememberMe(remember);
       }
+      // Small delay to ensure session is persisted
+      await new Promise((r) => setTimeout(r, 100));
       navigate({ to: "/dashboard" });
     } catch (err: any) {
-      toast.error(err.message ?? t("auth.failed"));
+      // Provide clear error messages
+      let message = err.message ?? t("auth.failed");
+      if (err.message?.includes("Invalid login credentials")) {
+        message = t("auth.failed");
+      } else if (err.message?.includes("network") || err.message?.includes("fetch")) {
+        message = t("auth.networkError");
+      } else if (err.message?.includes("session")) {
+        message = t("auth.sessionError");
+      }
+      toast.error(message);
     } finally {
       setLoading(false);
     }

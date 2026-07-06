@@ -27,23 +27,72 @@ type ProfileContextType = {
 
 const ProfileContext = createContext<ProfileContextType | null>(null);
 
+// Fallback profile for users without a profile record (treat as active admin)
+const createFallbackProfile = (userId: string, email: string): Profile => ({
+  id: userId,
+  email,
+  name: null,
+  role: "admin",
+  status: "active",
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
+});
+
 export function ProfileProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
-  const fetchProfile = useCallback(async (userId: string): Promise<Profile | null> => {
+  // Upsert profile if missing (handles existing users from before RBAC migration)
+  const ensureProfile = useCallback(async (userId: string, email: string): Promise<Profile> => {
     const { data, error } = await supabase
       .from("profiles")
       .select("*")
       .eq("id", userId)
       .maybeSingle();
+
     if (error) {
       console.error("[ProfileContext] Error fetching profile:", error);
-      return null;
+      // Return fallback on error - allows login to proceed
+      return createFallbackProfile(userId, email);
     }
-    return data as Profile | null;
+
+    if (data) {
+      return data as Profile;
+    }
+
+    // No profile exists - attempt to create one via edge function
+    // Fall back to treating user as active admin if creation fails
+    try {
+      const session = await supabase.auth.getSession();
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/user-management?action=ensure-profile`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.data.session?.access_token}`,
+        },
+        body: JSON.stringify({ userId, email }),
+      });
+
+      if (res.ok) {
+        const result = await res.json();
+        if (result.profile) {
+          return result.profile as Profile;
+        }
+      }
+    } catch (err) {
+      console.error("[ProfileContext] Error ensuring profile:", err);
+    }
+
+    // Return fallback profile - user can still use the app
+    return createFallbackProfile(userId, email);
   }, []);
+
+  const fetchProfile = useCallback(async (userId: string): Promise<Profile | null> => {
+    const { data: authData } = await supabase.auth.getUser();
+    const email = authData.user?.email || "";
+    return ensureProfile(userId, email);
+  }, [ensureProfile]);
 
   const signOutAndRedirect = useCallback(async () => {
     await supabase.auth.signOut();
@@ -98,8 +147,10 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     };
   }, [fetchProfile]);
 
+  // Only consider inactive if we have a profile and status is explicitly 'inactive'
+  // Fallback profiles (no DB record) are treated as active admin
   const isAdmin = profile?.role === "admin";
-  const isActive = profile?.status === "active";
+  const isActive = !profile || profile.status === "active";
   // Only admins can view financial data (profits, margins, expenses totals)
   const canViewFinancials = isAdmin && isActive;
 

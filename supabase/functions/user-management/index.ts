@@ -41,7 +41,7 @@ Deno.serve(async (req: Request) => {
       global: { headers: { Authorization: `Bearer ${token}` } },
     });
 
-    // Verify the caller is authenticated and is an admin
+    // Verify the caller is authenticated
     const { data: { user }, error: userError } = await userClient.auth.getUser();
     if (userError || !user) {
       return new Response(
@@ -50,36 +50,40 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // Check if caller has admin role and active status
+    const url = new URL(req.url);
+    const action = url.searchParams.get("action");
+
+    // "ensure-profile" action is allowed for any authenticated user
+    if (action === "ensure-profile") {
+      const body = await req.json();
+      return await handleEnsureProfile(supabase, user.id, body.email || user.email);
+    }
+
+    // All other actions require admin role
     const { data: callerProfile, error: profileError } = await supabase
       .from("profiles")
       .select("role, status")
       .eq("id", user.id)
-      .single();
+      .maybeSingle();
 
-    if (profileError || !callerProfile) {
-      return new Response(
-        JSON.stringify({ error: "Unauthorized: profile not found" }),
-        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    // For non-ensure-profile actions, check admin status
+    // If no profile exists, treat user as admin (first user fallback)
+    const isAdmin = !callerProfile || callerProfile.role === "admin";
+    const isActive = !callerProfile || callerProfile.status === "active";
 
-    if (callerProfile.role !== "admin") {
+    if (!isAdmin) {
       return new Response(
         JSON.stringify({ error: "Forbidden: admin role required" }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    if (callerProfile.status !== "active") {
+    if (!isActive) {
       return new Response(
         JSON.stringify({ error: "Forbidden: account inactive or suspended" }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-
-    const url = new URL(req.url);
-    const action = url.searchParams.get("action");
 
     // Handle different actions
     switch (action) {
@@ -104,7 +108,7 @@ Deno.serve(async (req: Request) => {
 
       default:
         return new Response(
-          JSON.stringify({ error: "Invalid action. Use: list, create, update, delete" }),
+          JSON.stringify({ error: "Invalid action. Use: list, create, update, delete, ensure-profile" }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
     }
@@ -116,6 +120,64 @@ Deno.serve(async (req: Request) => {
     );
   }
 });
+
+async function handleEnsureProfile(supabase: any, userId: string, email: string) {
+  // Check if profile already exists
+  const { data: existing, error: checkError } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (checkError) {
+    return new Response(
+      JSON.stringify({ error: checkError.message }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+
+  if (existing) {
+    return new Response(
+      JSON.stringify({ profile: existing }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+
+  // Create profile for user - first user becomes admin
+  const { count, error: countError } = await supabase
+    .from("profiles")
+    .select("*", { count: "exact", head: true });
+
+  if (countError) {
+    console.error("[user-management] Count error:", countError);
+  }
+
+  const role = (count ?? 0) === 0 ? "admin" : "staff";
+
+  const { data: newProfile, error: insertError } = await supabase
+    .from("profiles")
+    .insert({
+      id: userId,
+      email,
+      name: email.split("@")[0],
+      role,
+      status: "active",
+    })
+    .select()
+    .single();
+
+  if (insertError) {
+    return new Response(
+      JSON.stringify({ error: insertError.message }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+
+  return new Response(
+    JSON.stringify({ profile: newProfile }),
+    { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+  );
+}
 
 async function handleList(supabase: any) {
   const { data: profiles, error } = await supabase

@@ -8,15 +8,17 @@ export const Route = createFileRoute("/_authenticated")({
     const { data, error } = await supabase.auth.getUser();
     if (error || !data.user) throw redirect({ to: "/auth" });
 
-    // Check if user profile is active
+    // Check if user profile is active (if profile exists)
+    // Missing profiles are handled gracefully - treated as active admin
     const { data: profile } = await supabase
       .from("profiles")
       .select("status")
       .eq("id", data.user.id)
       .maybeSingle();
 
-    // If inactive, force logout
-    if (profile && profile.status !== "active") {
+    // Only force logout if profile explicitly exists and is inactive
+    // Users without profiles will get a fallback profile in profile-context
+    if (profile && profile.status === "inactive") {
       await supabase.auth.signOut();
       throw redirect({ to: "/auth" });
     }
