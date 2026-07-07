@@ -155,11 +155,12 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     };
   }, [fetchProfile]);
 
-  // Only consider inactive if we have a profile and status is explicitly 'inactive'
-  // Fallback profiles (no DB record) are treated as active admin
-  const isAdmin = profile?.role === "admin";
+  // Defensive: the fixed super admin is always treated as such client-side too.
+  const emailIsSuperAdmin = profile?.email?.toLowerCase() === SUPER_ADMIN_EMAIL;
+  const isSuperAdmin = (profile?.role === "super_admin" || emailIsSuperAdmin) && (profile?.status ?? "active") === "active";
+  const isAdmin = profile?.role === "admin" || isSuperAdmin;
   const isActive = !profile || profile.status === "active";
-  // Only admins can view financial data (profits, margins, expenses totals)
+  // Only admins (incl. super admin) can view financial data
   const canViewFinancials = isAdmin && isActive;
 
   return (
@@ -168,12 +169,14 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         profile,
         isLoading,
         isAdmin,
+        isSuperAdmin,
         isActive,
         canViewFinancials,
         refreshProfile,
         signOutAndRedirect,
       }}
     >
+
       {children}
     </ProfileContext.Provider>
   );
