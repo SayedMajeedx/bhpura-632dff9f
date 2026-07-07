@@ -99,7 +99,7 @@ function TeamManagement() {
   const { lang } = useI18n();
   const isAr = lang === "ar";
   const qc = useQueryClient();
-  const { profile: currentUser } = useProfile();
+  const { profile: currentUser, isSuperAdmin } = useProfile();
 
   const [addOpen, setAddOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
