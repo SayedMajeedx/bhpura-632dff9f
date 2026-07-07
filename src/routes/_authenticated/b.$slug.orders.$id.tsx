@@ -52,7 +52,7 @@ type SavedAddress = {
 };
 
 
-export const Route = createFileRoute("/_authenticated/orders/$id")({
+export const Route = createFileRoute("/_authenticated/b/$slug/orders/$id")({
   component: OrderDetail,
 });
 
@@ -354,7 +354,7 @@ function OrderDetail() {
 
     await supabase.from("order_items").delete().eq("order_id", order.id);
     if (items.length > 0) {
-      const { error: ie } = await supabase.from("order_items").insert(
+      const { error: ie } = await (supabase.from("order_items") as any).insert(
         items.map((i) => ({
           user_id: user.id, order_id: order.id,
           product_id: i.product_id ?? null, variant_id: i.variant_id ?? null,
@@ -516,7 +516,7 @@ function OrderDetail() {
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto">
       <div className="no-print mb-6 flex flex-wrap items-center justify-between gap-3">
-        <Link to="/orders" className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-2">
+        <Link to="/b/$slug/orders" params={{ slug: Route.useParams().slug }} className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-2">
           <ArrowLeft className="h-4 w-4" /> {t("orderDetail.back")}
         </Link>
         <div className="flex flex-wrap gap-2">
@@ -1384,7 +1384,7 @@ function ManageTemplatesDialog({ open, onOpenChange, templates, onChanged }: {
     if (editing.id) {
       ({ error } = await supabase.from("message_templates").update(payload).eq("id", editing.id));
     } else {
-      ({ error } = await supabase.from("message_templates").insert(payload));
+      ({ error } = await (supabase.from("message_templates") as any).insert(payload));
     }
     if (error) return toast.error(error.message);
     toast.success("Saved");

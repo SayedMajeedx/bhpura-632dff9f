@@ -62,13 +62,12 @@ Deno.serve(async (req: Request) => {
     // All other actions require admin role
     const { data: callerProfile } = await supabase
       .from("profiles")
-      .select("role, status, email")
+      .select("role, status, email, brand_id")
       .eq("id", user.id)
       .maybeSingle();
 
-    // If no profile exists, treat user as admin (first user fallback)
     const callerRole: string = callerProfile?.role || "admin";
-    const isAdmin = callerRole === "admin" || callerRole === "super_admin";
+    const isAdmin = callerRole === "admin" || callerRole === "super_admin" || callerRole === "brand_admin";
     const isSuperAdmin = callerRole === "super_admin" ||
       (callerProfile?.email || "").toLowerCase() === "majeed@hotmail.it";
     const isActive = !callerProfile || callerProfile.status === "active";
@@ -87,12 +86,16 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const callerCtx = { userId: user.id, isSuperAdmin };
+    const callerCtx = {
+      userId: user.id,
+      isSuperAdmin,
+      callerBrandId: callerProfile?.brand_id ?? null,
+    };
 
     // Handle different actions
     switch (action) {
       case "list": {
-        return await handleList(supabase);
+        return await handleList(supabase, callerCtx);
       }
 
       case "create": {
@@ -184,27 +187,39 @@ async function handleEnsureProfile(supabase: any, userId: string, email: string)
   );
 }
 
-async function handleList(supabase: any) {
-  const { data: profiles, error } = await supabase
+async function handleList(supabase: any, ctx: { isSuperAdmin: boolean; callerBrandId: string | null }) {
+  let query = supabase
     .from("profiles")
-    .select("id, email, name, role, status, created_at, updated_at")
+    .select("id, email, name, role, status, brand_id, created_at, updated_at, brand:brands(id, slug, name_en, name_ar, logo_url, is_active)")
     .order("created_at", { ascending: false });
 
+  // Non-super-admins only see profiles inside their own brand
+  if (!ctx.isSuperAdmin) {
+    if (!ctx.callerBrandId) {
+      return new Response(
+        JSON.stringify({ profiles: [] }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    query = query.eq("brand_id", ctx.callerBrandId);
+  }
+
+  const { data: profiles, error } = await query;
   if (error) {
     return new Response(
       JSON.stringify({ error: error.message }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
-
   return new Response(
     JSON.stringify({ profiles }),
     { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
   );
 }
 
-async function handleCreate(supabase: any, body: any, ctx: { userId: string; isSuperAdmin: boolean }) {
+async function handleCreate(supabase: any, body: any, ctx: { userId: string; isSuperAdmin: boolean; callerBrandId: string | null }) {
   const { email, name, role, password } = body;
+  let { brand_id } = body;
 
   if (!email || !password) {
     return new Response(
@@ -214,10 +229,30 @@ async function handleCreate(supabase: any, body: any, ctx: { userId: string; isS
   }
 
   const userRole = role || "staff";
-  const validRoles = ctx.isSuperAdmin ? ["super_admin", "admin", "staff"] : ["admin", "staff"];
+  const validRoles = ctx.isSuperAdmin
+    ? ["super_admin", "admin", "brand_admin", "staff"]
+    : ["staff"]; // non-super-admins can only create staff in their own brand
   if (!validRoles.includes(userRole)) {
     return new Response(
       JSON.stringify({ error: `Invalid role. Allowed: ${validRoles.join(", ")}` }),
+      { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+
+  // Force brand for non-super-admins
+  if (!ctx.isSuperAdmin) {
+    brand_id = ctx.callerBrandId;
+    if (!brand_id) {
+      return new Response(
+        JSON.stringify({ error: "Your account has no brand assigned" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+  }
+  // brand_admin/staff must have a brand
+  if ((userRole === "brand_admin" || userRole === "staff") && !brand_id) {
+    return new Response(
+      JSON.stringify({ error: "brand_id is required for brand_admin/staff" }),
       { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
@@ -244,12 +279,19 @@ async function handleCreate(supabase: any, body: any, ctx: { userId: string; isS
     );
   }
 
-  // Wait for trigger to create profile, then set desired role
+  // Wait for trigger to create profile, then set desired role/brand
   await new Promise((r) => setTimeout(r, 400));
+
+  const updatePayload: Record<string, any> = { name: name || email.split("@")[0], role: userRole };
+  if (userRole !== "super_admin") {
+    updatePayload.brand_id = brand_id ?? null;
+  } else {
+    updatePayload.brand_id = null;
+  }
 
   const { error: profileUpdateError } = await supabase
     .from("profiles")
-    .update({ name: name || email.split("@")[0], role: userRole })
+    .update(updatePayload)
     .eq("id", userId);
 
   if (profileUpdateError) {
@@ -264,6 +306,7 @@ async function handleCreate(supabase: any, body: any, ctx: { userId: string; isS
         email,
         name: name || email.split("@")[0],
         role: userRole,
+        brand_id: updatePayload.brand_id,
         status: "active",
       },
     }),
@@ -271,8 +314,8 @@ async function handleCreate(supabase: any, body: any, ctx: { userId: string; isS
   );
 }
 
-async function handleUpdate(supabase: any, body: any, ctx: { userId: string; isSuperAdmin: boolean }) {
-  const { userId, role, status, name } = body;
+async function handleUpdate(supabase: any, body: any, ctx: { userId: string; isSuperAdmin: boolean; callerBrandId: string | null }) {
+  const { userId, role, status, name, brand_id } = body;
 
   if (!userId) {
     return new Response(
@@ -281,10 +324,9 @@ async function handleUpdate(supabase: any, body: any, ctx: { userId: string; isS
     );
   }
 
-  // Look up target to enforce super admin protection
   const { data: target } = await supabase
     .from("profiles")
-    .select("role, email")
+    .select("role, email, brand_id")
     .eq("id", userId)
     .maybeSingle();
 
@@ -298,7 +340,17 @@ async function handleUpdate(supabase: any, body: any, ctx: { userId: string; isS
     );
   }
 
-  const validRoles = ctx.isSuperAdmin ? ["super_admin", "admin", "staff"] : ["admin", "staff"];
+  // Non-super-admins can only touch users in their own brand
+  if (!ctx.isSuperAdmin && target?.brand_id && target.brand_id !== ctx.callerBrandId) {
+    return new Response(
+      JSON.stringify({ error: "You can only manage users in your own brand" }),
+      { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+
+  const validRoles = ctx.isSuperAdmin
+    ? ["super_admin", "admin", "brand_admin", "staff"]
+    : ["staff"];
 
   const updates: Record<string, any> = {};
   if (role !== undefined) {
@@ -322,6 +374,10 @@ async function handleUpdate(supabase: any, body: any, ctx: { userId: string; isS
   if (name !== undefined) {
     updates.name = name;
   }
+  // Only super admin can reassign brand_id
+  if (brand_id !== undefined && ctx.isSuperAdmin) {
+    updates.brand_id = brand_id;
+  }
 
   if (Object.keys(updates).length === 0) {
     return new Response(
@@ -329,6 +385,7 @@ async function handleUpdate(supabase: any, body: any, ctx: { userId: string; isS
       { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
+
 
   const { error } = await supabase
     .from("profiles")
@@ -352,7 +409,7 @@ async function handleUpdate(supabase: any, body: any, ctx: { userId: string; isS
   );
 }
 
-async function handleDelete(supabase: any, body: any, ctx: { userId: string; isSuperAdmin: boolean }) {
+async function handleDelete(supabase: any, body: any, ctx: { userId: string; isSuperAdmin: boolean; callerBrandId: string | null }) {
   const { userId } = body;
 
   if (!userId) {
@@ -371,7 +428,7 @@ async function handleDelete(supabase: any, body: any, ctx: { userId: string; isS
 
   const { data: target } = await supabase
     .from("profiles")
-    .select("role, email")
+    .select("role, email, brand_id")
     .eq("id", userId)
     .maybeSingle();
 
@@ -385,6 +442,12 @@ async function handleDelete(supabase: any, body: any, ctx: { userId: string; isS
   if (target?.role === "super_admin" && !ctx.isSuperAdmin) {
     return new Response(
       JSON.stringify({ error: "Only a super admin can delete a super admin" }),
+      { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+  if (!ctx.isSuperAdmin && target?.brand_id && target.brand_id !== ctx.callerBrandId) {
+    return new Response(
+      JSON.stringify({ error: "You can only delete users in your own brand" }),
       { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

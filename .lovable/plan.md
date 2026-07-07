@@ -1,71 +1,92 @@
-## Goal
-
-Extend the existing RBAC/Team Management foundation to add a `super_admin` tier (locked to `majeed@hotmail.it`), prepare for future multi-brand tenancy via `brand_id`, and harden the Team page + guards. The existing Team UI, edge function, and profile context are kept and extended (not rewritten).
+# Multi-Brand (Multi-Tenant) Infrastructure
 
 ## 1. Database migration
 
-Single migration that:
+**New table `public.brands`**
+- `id uuid pk`, `slug text unique not null` (lowercase, url-safe, validated),
+  `name_en text not null`, `name_ar text`, `logo_url text`,
+  `is_active boolean default true`, `created_by uuid` (super admin),
+  timestamps.
+- GRANTs: `authenticated` SELECT (RLS narrows), `service_role` ALL.
+- RLS: super admin full CRUD; everyone else SELECT rows they belong to
+  (`brand_id = current_brand_id()` or `super_admin`).
 
-- Drops the current `role` CHECK constraint and adds a new one: `role IN ('super_admin','admin','staff')`.
-- Adds `brand_id uuid NULL` to `profiles` + index (nullable, no FK yet — future `brands` table will add it).
-- Adds `brand_id uuid NULL` to the main tenant-scoped tables (`products`, `product_variants`, `orders`, `customers`, `expenses`, `business_settings`, `activity_logs`, `campaigns/message_templates`) so future isolation is a filter change, not a re-migration. All nullable, no policy change today.
-- Updates helper fns:
-  - `is_admin()` → true for `admin` OR `super_admin` (active).
-  - New `is_super_admin()` → true only for `super_admin` (active).
-- Updates `handle_new_user()`: if `NEW.email = 'majeed@hotmail.it'` → role `super_admin`, status `active`. Otherwise keep existing first-user-becomes-admin logic.
-- Seed/upsert: if a profile row exists for `majeed@hotmail.it`, force `role='super_admin'`, `status='active'`. If the auth user exists but no profile, insert one.
-- RLS additions on `profiles`:
-  - Only `super_admin` can UPDATE another profile's `role` to/from `super_admin` (enforced via trigger since RLS can't diff columns cleanly).
-  - `super_admin` cannot be deleted or deactivated by non-super_admin (trigger-enforced).
+**Role enum + role change**
+- Extend `role` check constraint on `profiles` to include `brand_admin`.
+- Update `is_admin()` to include `brand_admin` (per-brand admin still is an
+  "admin" inside their brand).
+- Add `is_brand_admin()` and `current_brand_id()` security-definer helpers.
+- Add `can_access_brand(bid uuid)` = `is_super_admin() OR bid = current_brand_id()`.
 
-## 2. Edge function `user-management`
+**Default brand + backfill**
+- Insert `('pura', 'Pura', 'بورا')`.
+- Backfill `brand_id = <pura.id>` on every existing row in:
+  `profiles, products, product_variants, orders, order_items, customers,
+   customer_addresses, expenses, activity_logs, message_templates,
+   business_settings, customization_options`.
+- After backfill, set `brand_id NOT NULL` on those tables (kept nullable on
+  `profiles` because super admin has no brand).
 
-- Extend role validation to accept `super_admin` only when caller is `super_admin`.
-- `create`: staff/admin allowed for admins; only super_admin can create another super_admin (in practice unused — majeed is fixed).
-- `update`: block non-super_admin from changing a super_admin's role/status; block downgrading the fixed super_admin email.
-- `delete`: block deleting `majeed@hotmail.it` or any super_admin unless caller is super_admin (and not self).
-- `list`: unchanged, returns everyone; UI badges super_admin distinctly.
-- Defensive: wrap role/brand_id reads with `?? null` so missing columns don't 500.
+**Brand-scoped RLS**
+- Rewrite existing policies on the 10 tenant tables to require
+  `can_access_brand(brand_id)`.
+- Writes: default `brand_id = current_brand_id()` via triggers so callers
+  don't have to remember to set it.
+- Super admin sees/edits everything.
 
-## 3. Profile context (`src/lib/profile-context.tsx`)
+## 2. Server side
 
-- Extend `UserRole` union: `'super_admin' | 'admin' | 'staff'`.
-- Add `brandId: string | null` to `Profile`.
-- Add derived flags: `isSuperAdmin`, keep `isAdmin` true for both admin + super_admin, `canViewFinancials` stays admin+.
-- Fallback profile logic unchanged; if fetched email === `majeed@hotmail.it`, force `isSuperAdmin = true` client-side as a defensive default.
+**Edge fn `user-management`**
+- Accept optional `brand_id` on create/update.
+- Accept `brand_admin` role only when caller is super admin (brand admins
+  can only create `staff` inside their own brand).
+- Force `brand_id` to equal caller's brand for non-super-admin callers.
 
-## 4. Team Management page (`src/routes/_authenticated/team.tsx`)
+**New edge fn `brand-management`** (super-admin only)
+- `create` (name_en, name_ar, slug, logo_url) + assign initial brand admin.
+- `list`, `update`, `deactivate`.
 
-Additive changes only:
+## 3. Client
 
-- Route `beforeLoad`: allow `admin` OR `super_admin`.
-- Add "Super Admin" badge row (crown icon) — non-editable, non-deletable in the UI for anyone except a super_admin viewer.
-- Role select in Add/Edit dialogs: show `Super Admin` option only when current viewer `isSuperAdmin`.
-- Actions menu: hide Edit/Delete/Suspend on super_admin rows unless viewer is super_admin; never allow deleting/suspending self.
-- Full bilingual pass on any new strings; RTL flips already handled by root `dir` attribute.
-- Loading skeleton + try/catch already in place; add graceful "column missing" fallbacks (treat as null).
+**`profile-context`**
+- Add `brand` (joined row) and `isBrandAdmin` derived flag.
 
-## 5. Route + dashboard guards
+**Routing (TanStack file routes)**
+Move every workspace page under a new brand layout:
+- New: `_authenticated.b.$slug.route.tsx` — layout that loads the brand by
+  slug, checks the caller can access it (super admin OR brand matches),
+  provides a `BrandContext`, renders `<Outlet />`.
+- Move: `dashboard`, `inventory`, `customers`, `campaigns`, `orders.index`,
+  `orders.$id`, `expenses`, `settings`, `team` files into
+  `_authenticated/b/$slug/…`.
+- Keep bare `/dashboard` as a smart redirector: super admin → `/brands`,
+  brand admin/staff → `/b/{their-slug}/dashboard`.
+- New: `_authenticated.brands.tsx` — super-admin-only brand list/create UI.
+- Reserve: `store.$slug.tsx` — public placeholder route that fetches the
+  brand by slug and renders a "coming soon" shell (RLS allows anon SELECT
+  on the specific brand row via a narrow policy).
 
-- `app-shell.tsx`: Team Management nav item visible for both `admin` and `super_admin` (already gated on `isAdmin` which will now cover both).
-- Dashboard financial widgets already use `canViewFinancials` — verify staff sees hidden state (no change needed if flag correct).
-- Force logout on inactive: existing `profile-context` effect + `_authenticated/route.tsx` gate already do this; add a bilingual toast right before signOut so the user sees the reason.
+**AppShell**
+- Nav links now use `to="/b/$slug/dashboard"` etc., built from current
+  brand context.
+- Add brand switcher (super admin only) at top of sidebar.
+- Language switcher, i18n, and existing behaviour untouched.
 
-## 6. Multi-tenancy readiness (no behavior change today)
+**User-management page (team)**
+- When super admin: brand column + brand assignment dropdown; `brand_admin`
+  role option.
+- When brand admin: staff-only role selector, brand implicit.
 
-- `brand_id` columns added but not enforced in RLS.
-- Document (comment in migration) that future brand isolation = add `brands` table + tighten policies to `brand_id = current_user_brand()`; today all rows have `brand_id IS NULL` = shared/default brand.
+## 4. Storefront readiness (no UI yet)
+- `store.$slug.tsx` renders a minimal "Storefront coming soon" so the
+  slug-based public URL is reserved and the brand lookup path is exercised.
+- All product/variant/settings tables now carry `brand_id NOT NULL`, ready
+  for a future public read via a narrow `TO anon` policy on
+  `products/product_variants` filtered by `brand_id + is_active`.
 
-## Technical notes
-
-- Migration must include GRANTs re-issued only if new tables were created (none here — only ALTERs), so no GRANT block needed.
-- The fixed super_admin email `majeed@hotmail.it` is enforced in 3 layers: DB trigger on signup, seed upsert, edge function guard.
-- No changes to barcode, orders, inventory, or any other module.
-
-## Files touched
-
-- `supabase/migrations/<new>.sql` (new)
-- `supabase/functions/user-management/index.ts`
-- `src/lib/profile-context.tsx`
-- `src/routes/_authenticated/team.tsx`
-- (verify only) `src/components/app-shell.tsx`, `src/routes/_authenticated/dashboard.tsx`
+## 5. Risk / rollout
+- Migration is destructive of current policies — I'll drop/recreate in one
+  transaction with backfill first, then set NOT NULL last.
+- Type regeneration happens after the migration; client edits follow.
+- Every existing feature stays functional because super admin sees all
+  brands and existing data belongs to `pura`.

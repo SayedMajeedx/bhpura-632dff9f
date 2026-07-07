@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { useT } from "@/lib/i18n";
 import { resolvePaymentStatus, PAYMENT_BADGE_CLASSES } from "@/lib/payment-status";
 
-export const Route = createFileRoute("/_authenticated/orders/")({
+export const Route = createFileRoute("/_authenticated/b/$slug/orders/")({
   component: OrdersList,
 });
 
@@ -39,6 +39,8 @@ function OrdersList() {
   const t = useT();
   const qc = useQueryClient();
   const navigate = useNavigate();
+  const { slug } = Route.useParams();
+
 
   const { data } = useQuery({
     queryKey: ["orders"],
@@ -59,12 +61,12 @@ function OrdersList() {
     const nextNum = settings?.next_invoice_number ?? 1001;
     const currency = settings?.currency ?? "BHD";
     const taxRate = settings?.default_tax_rate ?? 15;
-    const { data: order, error } = await supabase.from("orders").insert({
+    const { data: order, error } = await (supabase.from("orders") as any).insert({
       user_id: user.id, invoice_number: nextNum, currency, tax_rate: taxRate,
     }).select().single();
     if (error) return toast.error(error.message);
     await supabase.from("business_settings").update({ next_invoice_number: nextNum + 1 }).eq("user_id", user.id);
-    navigate({ to: "/orders/$id", params: { id: order.id } });
+    navigate({ to: "/b/$slug/orders/$id", params: { slug, id: order.id } });
   };
 
   const del = async (id: string) => {
@@ -107,7 +109,7 @@ function OrdersList() {
               {data!.map((o) => (
                 <tr key={o.id} className="border-t border-border hover:bg-secondary/30">
                   <td className="p-4">
-                    <Link to="/orders/$id" params={{ id: o.id }} className="text-primary font-medium">
+                    <Link to="/b/$slug/orders/$id" params={{ slug, id: o.id }} className="text-primary font-medium">
                       #{o.invoice_number}
                     </Link>
                   </td>
