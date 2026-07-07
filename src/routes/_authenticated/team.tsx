@@ -360,43 +360,56 @@ function TeamManagement() {
                     </td>
                     <td className="p-4 text-end">
                       <div className="flex items-center justify-end gap-1">
-                        {/* Can't deactivate or delete self */}
-                        {member.id !== currentUser?.id && (
-                          <>
-                            <Button variant="ghost" size="icon" onClick={() => openEdit(member)}>
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            {member.status === "active" && (
+                        {(() => {
+                          const isSelf = member.id === currentUser?.id;
+                          const targetIsSuper = member.role === "super_admin" ||
+                            member.email.toLowerCase() === SUPER_ADMIN_EMAIL;
+                          const canManage = !isSelf && (!targetIsSuper || isSuperAdmin);
+                          if (!canManage) {
+                            return (
+                              <span className="text-xs text-muted-foreground">
+                                {isSelf ? (isAr ? "أنت" : "You") : (isAr ? "محمي" : "Protected")}
+                              </span>
+                            );
+                          }
+                          return (
+                            <>
+                              <Button variant="ghost" size="icon" onClick={() => openEdit(member)}>
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              {member.status === "active" && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  title={isAr ? "إلغاء تفعيل الحساب" : "Deactivate account"}
+                                  onClick={() => handleUpdate(member.id, { status: "inactive" })}
+                                >
+                                  <UserX className="h-4 w-4 text-amber-600" />
+                                </Button>
+                              )}
+                              {member.status === "inactive" && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  title={isAr ? "إعادة تفعيل الحساب" : "Reactivate account"}
+                                  onClick={() => handleUpdate(member.id, { status: "active" })}
+                                >
+                                  <Check className="h-4 w-4 text-emerald-600" />
+                                </Button>
+                              )}
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                title={isAr ? "إلغاء تفعيل الحساب" : "Deactivate account"}
-                                onClick={() => handleUpdate(member.id, { status: "inactive" })}
+                                onClick={() => setDeleteConfirm(member)}
                               >
-                                <UserX className="h-4 w-4 text-amber-600" />
+                                <Trash2 className="h-4 w-4 text-destructive" />
                               </Button>
-                            )}
-                            {member.status === "inactive" && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                title={isAr ? "إعادة تفعيل الحساب" : "Reactivate account"}
-                                onClick={() => handleUpdate(member.id, { status: "active" })}
-                              >
-                                <Check className="h-4 w-4 text-emerald-600" />
-                              </Button>
-                            )}
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => setDeleteConfirm(member)}
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </>
-                        )}
+                            </>
+                          );
+                        })()}
                       </div>
                     </td>
+
                   </tr>
                 ))}
               </tbody>
