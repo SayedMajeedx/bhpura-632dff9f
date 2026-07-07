@@ -24,6 +24,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedCustomersRouteImport } from './routes/_authenticated/customers'
 import { Route as AuthenticatedCampaignsRouteImport } from './routes/_authenticated/campaigns'
 import { Route as AuthenticatedBrandsRouteImport } from './routes/_authenticated/brands'
+import { Route as StoreSlugRouteRouteImport } from './routes/store.$slug.route'
 import { Route as AuthenticatedBSlugRouteRouteImport } from './routes/_authenticated/b.$slug.route'
 import { Route as AuthenticatedBSlugTeamRouteImport } from './routes/_authenticated/b.$slug.team'
 import { Route as AuthenticatedBSlugSettingsRouteImport } from './routes/_authenticated/b.$slug.settings'
@@ -109,6 +110,11 @@ const AuthenticatedBrandsRoute = AuthenticatedBrandsRouteImport.update({
   path: '/brands',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const StoreSlugRouteRoute = StoreSlugRouteRouteImport.update({
+  id: '/store/$slug',
+  path: '/store/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedBSlugRouteRoute = AuthenticatedBSlugRouteRouteImport.update({
   id: '/b/$slug',
   path: '/b/$slug',
@@ -173,6 +179,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/store/$slug': typeof StoreSlugRouteRoute
   '/brands': typeof AuthenticatedBrandsRoute
   '/campaigns': typeof AuthenticatedCampaignsRoute
   '/customers': typeof AuthenticatedCustomersRoute
@@ -199,6 +206,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/store/$slug': typeof StoreSlugRouteRoute
   '/brands': typeof AuthenticatedBrandsRoute
   '/campaigns': typeof AuthenticatedCampaignsRoute
   '/customers': typeof AuthenticatedCustomersRoute
@@ -227,6 +235,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/store/$slug': typeof StoreSlugRouteRoute
   '/_authenticated/brands': typeof AuthenticatedBrandsRoute
   '/_authenticated/campaigns': typeof AuthenticatedCampaignsRoute
   '/_authenticated/customers': typeof AuthenticatedCustomersRoute
@@ -255,6 +264,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/forgot-password'
     | '/reset-password'
+    | '/store/$slug'
     | '/brands'
     | '/campaigns'
     | '/customers'
@@ -281,6 +291,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/forgot-password'
     | '/reset-password'
+    | '/store/$slug'
     | '/brands'
     | '/campaigns'
     | '/customers'
@@ -308,6 +319,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/forgot-password'
     | '/reset-password'
+    | '/store/$slug'
     | '/_authenticated/brands'
     | '/_authenticated/campaigns'
     | '/_authenticated/customers'
@@ -336,6 +348,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  StoreSlugRouteRoute: typeof StoreSlugRouteRoute
   InvoiceIdRoute: typeof InvoiceIdRoute
 }
 
@@ -445,6 +458,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/brands'
       preLoaderRoute: typeof AuthenticatedBrandsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/store/$slug': {
+      id: '/store/$slug'
+      path: '/store/$slug'
+      fullPath: '/store/$slug'
+      preLoaderRoute: typeof StoreSlugRouteRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/b/$slug': {
       id: '/_authenticated/b/$slug'
@@ -584,6 +604,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  StoreSlugRouteRoute: StoreSlugRouteRoute,
   InvoiceIdRoute: InvoiceIdRoute,
 }
 export const routeTree = rootRouteImport

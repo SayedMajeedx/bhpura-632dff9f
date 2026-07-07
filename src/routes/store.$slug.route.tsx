@@ -51,11 +51,11 @@ export const Route = createFileRoute("/store/$slug")({
       footer_note: settings?.footer_note ?? null,
     };
 
+    const heroArr = Array.isArray(brand.hero_media)
+      ? (brand.hero_media as unknown as Array<{ type: "image" | "video"; url: string }>)
+      : [];
     return {
-      brand: {
-        ...brand,
-        hero_media: Array.isArray(brand.hero_media) ? brand.hero_media : [],
-      } as Brand,
+      brand: { ...brand, hero_media: heroArr } as unknown as Brand,
       settings: safeSettings,
     };
   },
