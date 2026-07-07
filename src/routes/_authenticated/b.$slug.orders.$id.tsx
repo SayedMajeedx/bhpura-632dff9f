@@ -89,7 +89,7 @@ type Item = {
 function OrderDetail() {
   const t = useT();
   const { lang } = useI18n();
-  const { id } = Route.useParams();
+  const { id, slug } = Route.useParams();
   const qc = useQueryClient();
   const brand = useBrand();
   const brandId = brand.id;
@@ -543,7 +543,7 @@ function OrderDetail() {
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto">
       <div className="no-print mb-6 flex flex-wrap items-center justify-between gap-3">
-        <Link to="/b/$slug/orders" params={{ slug: Route.useParams().slug }} className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-2">
+        <Link to="/b/$slug/orders" params={{ slug }} className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-2">
           <ArrowLeft className="h-4 w-4" /> {t("orderDetail.back")}
         </Link>
         <div className="flex flex-wrap gap-2">
