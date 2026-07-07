@@ -2,8 +2,10 @@ import { createContext, useContext, useEffect, useState, useCallback, type React
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "@tanstack/react-router";
 
-export type UserRole = "admin" | "staff";
+export type UserRole = "super_admin" | "admin" | "staff";
 export type UserStatus = "active" | "inactive";
+
+export const SUPER_ADMIN_EMAIL = "majeed@hotmail.it";
 
 export type Profile = {
   id: string;
@@ -11,6 +13,7 @@ export type Profile = {
   name: string | null;
   role: UserRole;
   status: UserStatus;
+  brand_id: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -19,11 +22,13 @@ type ProfileContextType = {
   profile: Profile | null;
   isLoading: boolean;
   isAdmin: boolean;
+  isSuperAdmin: boolean;
   isActive: boolean;
   canViewFinancials: boolean;
   refreshProfile: () => Promise<void>;
   signOutAndRedirect: () => Promise<void>;
 };
+
 
 const ProfileContext = createContext<ProfileContextType | null>(null);
 
