@@ -74,7 +74,7 @@ function Checkout() {
       toast.success(t("تم استلام طلبك!", "Order placed!"));
       navigate({
         to: "/store/$slug/thank-you/$orderId",
-        params: { slug: brand.slug, orderId: orderId },
+        params: { slug: brand.slug, orderId: String(orderId ?? "") },
       });
     } catch (e: any) {
       const msg = String(e?.message ?? e);
