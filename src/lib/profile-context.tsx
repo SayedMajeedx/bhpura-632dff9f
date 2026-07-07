@@ -2,10 +2,19 @@ import { createContext, useContext, useEffect, useState, useCallback, type React
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "@tanstack/react-router";
 
-export type UserRole = "super_admin" | "admin" | "staff";
+export type UserRole = "super_admin" | "admin" | "brand_admin" | "staff";
 export type UserStatus = "active" | "inactive";
 
 export const SUPER_ADMIN_EMAIL = "majeed@hotmail.it";
+
+export type BrandSummary = {
+  id: string;
+  slug: string;
+  name_en: string;
+  name_ar: string | null;
+  logo_url: string | null;
+  is_active: boolean;
+};
 
 export type Profile = {
   id: string;
@@ -14,6 +23,7 @@ export type Profile = {
   role: UserRole;
   status: UserStatus;
   brand_id: string | null;
+  brand?: BrandSummary | null;
   created_at: string;
   updated_at: string;
 };
@@ -23,6 +33,7 @@ type ProfileContextType = {
   isLoading: boolean;
   isAdmin: boolean;
   isSuperAdmin: boolean;
+  isBrandAdmin: boolean;
   isActive: boolean;
   canViewFinancials: boolean;
   refreshProfile: () => Promise<void>;
@@ -41,6 +52,7 @@ const createFallbackProfile = (userId: string, email: string): Profile => ({
   role: email.toLowerCase() === SUPER_ADMIN_EMAIL ? "super_admin" : "admin",
   status: "active",
   brand_id: null,
+  brand: null,
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
 });
@@ -55,19 +67,19 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   const ensureProfile = useCallback(async (userId: string, email: string): Promise<Profile> => {
     const { data, error } = await supabase
       .from("profiles")
-      .select("*")
+      .select("*, brand:brands(id, slug, name_en, name_ar, logo_url, is_active)")
       .eq("id", userId)
       .maybeSingle();
 
     if (error) {
       console.error("[ProfileContext] Error fetching profile:", error);
-      // Return fallback on error - allows login to proceed
       return createFallbackProfile(userId, email);
     }
 
     if (data) {
       return data as Profile;
     }
+
 
     // No profile exists - attempt to create one via edge function
     // Fall back to treating user as active admin if creation fails
@@ -158,9 +170,10 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   // Defensive: the fixed super admin is always treated as such client-side too.
   const emailIsSuperAdmin = profile?.email?.toLowerCase() === SUPER_ADMIN_EMAIL;
   const isSuperAdmin = (profile?.role === "super_admin" || emailIsSuperAdmin) && (profile?.status ?? "active") === "active";
-  const isAdmin = profile?.role === "admin" || isSuperAdmin;
+  const isBrandAdmin = profile?.role === "brand_admin" && (profile?.status ?? "active") === "active";
+  const isAdmin = profile?.role === "admin" || isBrandAdmin || isSuperAdmin;
   const isActive = !profile || profile.status === "active";
-  // Only admins (incl. super admin) can view financial data
+  // Only admins (incl. super admin, brand admin) can view financial data
   const canViewFinancials = isAdmin && isActive;
 
   return (
@@ -170,13 +183,13 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         isLoading,
         isAdmin,
         isSuperAdmin,
+        isBrandAdmin,
         isActive,
         canViewFinancials,
         refreshProfile,
         signOutAndRedirect,
       }}
     >
-
       {children}
     </ProfileContext.Provider>
   );

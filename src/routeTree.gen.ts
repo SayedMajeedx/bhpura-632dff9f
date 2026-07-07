@@ -14,16 +14,27 @@ import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as StoreSlugRouteImport } from './routes/store.$slug'
 import { Route as InvoiceIdRouteImport } from './routes/invoice.$id'
 import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/team'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedOrdersRouteImport } from './routes/_authenticated/orders'
 import { Route as AuthenticatedInventoryRouteImport } from './routes/_authenticated/inventory'
 import { Route as AuthenticatedExpensesRouteImport } from './routes/_authenticated/expenses'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCustomersRouteImport } from './routes/_authenticated/customers'
 import { Route as AuthenticatedCampaignsRouteImport } from './routes/_authenticated/campaigns'
-import { Route as AuthenticatedOrdersIndexRouteImport } from './routes/_authenticated/orders.index'
-import { Route as AuthenticatedOrdersIdRouteImport } from './routes/_authenticated/orders.$id'
+import { Route as AuthenticatedBrandsRouteImport } from './routes/_authenticated/brands'
+import { Route as AuthenticatedBSlugRouteRouteImport } from './routes/_authenticated/b.$slug.route'
+import { Route as AuthenticatedBSlugTeamRouteImport } from './routes/_authenticated/b.$slug.team'
+import { Route as AuthenticatedBSlugSettingsRouteImport } from './routes/_authenticated/b.$slug.settings'
+import { Route as AuthenticatedBSlugInventoryRouteImport } from './routes/_authenticated/b.$slug.inventory'
+import { Route as AuthenticatedBSlugExpensesRouteImport } from './routes/_authenticated/b.$slug.expenses'
+import { Route as AuthenticatedBSlugDashboardRouteImport } from './routes/_authenticated/b.$slug.dashboard'
+import { Route as AuthenticatedBSlugCustomersRouteImport } from './routes/_authenticated/b.$slug.customers'
+import { Route as AuthenticatedBSlugCampaignsRouteImport } from './routes/_authenticated/b.$slug.campaigns'
+import { Route as AuthenticatedBSlugOrdersIndexRouteImport } from './routes/_authenticated/b.$slug.orders.index'
+import { Route as AuthenticatedBSlugOrdersIdRouteImport } from './routes/_authenticated/b.$slug.orders.$id'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -49,6 +60,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StoreSlugRoute = StoreSlugRouteImport.update({
+  id: '/store/$slug',
+  path: '/store/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const InvoiceIdRoute = InvoiceIdRouteImport.update({
   id: '/invoice/$id',
   path: '/invoice/$id',
@@ -62,6 +78,11 @@ const AuthenticatedTeamRoute = AuthenticatedTeamRouteImport.update({
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedOrdersRoute = AuthenticatedOrdersRouteImport.update({
+  id: '/orders',
+  path: '/orders',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedInventoryRoute = AuthenticatedInventoryRouteImport.update({
@@ -89,49 +110,123 @@ const AuthenticatedCampaignsRoute = AuthenticatedCampaignsRouteImport.update({
   path: '/campaigns',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedOrdersIndexRoute =
-  AuthenticatedOrdersIndexRouteImport.update({
-    id: '/orders/',
-    path: '/orders/',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedOrdersIdRoute = AuthenticatedOrdersIdRouteImport.update({
-  id: '/orders/$id',
-  path: '/orders/$id',
+const AuthenticatedBrandsRoute = AuthenticatedBrandsRouteImport.update({
+  id: '/brands',
+  path: '/brands',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedBSlugRouteRoute = AuthenticatedBSlugRouteRouteImport.update({
+  id: '/b/$slug',
+  path: '/b/$slug',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedBSlugTeamRoute = AuthenticatedBSlugTeamRouteImport.update({
+  id: '/team',
+  path: '/team',
+  getParentRoute: () => AuthenticatedBSlugRouteRoute,
+} as any)
+const AuthenticatedBSlugSettingsRoute =
+  AuthenticatedBSlugSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => AuthenticatedBSlugRouteRoute,
+  } as any)
+const AuthenticatedBSlugInventoryRoute =
+  AuthenticatedBSlugInventoryRouteImport.update({
+    id: '/inventory',
+    path: '/inventory',
+    getParentRoute: () => AuthenticatedBSlugRouteRoute,
+  } as any)
+const AuthenticatedBSlugExpensesRoute =
+  AuthenticatedBSlugExpensesRouteImport.update({
+    id: '/expenses',
+    path: '/expenses',
+    getParentRoute: () => AuthenticatedBSlugRouteRoute,
+  } as any)
+const AuthenticatedBSlugDashboardRoute =
+  AuthenticatedBSlugDashboardRouteImport.update({
+    id: '/dashboard',
+    path: '/dashboard',
+    getParentRoute: () => AuthenticatedBSlugRouteRoute,
+  } as any)
+const AuthenticatedBSlugCustomersRoute =
+  AuthenticatedBSlugCustomersRouteImport.update({
+    id: '/customers',
+    path: '/customers',
+    getParentRoute: () => AuthenticatedBSlugRouteRoute,
+  } as any)
+const AuthenticatedBSlugCampaignsRoute =
+  AuthenticatedBSlugCampaignsRouteImport.update({
+    id: '/campaigns',
+    path: '/campaigns',
+    getParentRoute: () => AuthenticatedBSlugRouteRoute,
+  } as any)
+const AuthenticatedBSlugOrdersIndexRoute =
+  AuthenticatedBSlugOrdersIndexRouteImport.update({
+    id: '/orders/',
+    path: '/orders/',
+    getParentRoute: () => AuthenticatedBSlugRouteRoute,
+  } as any)
+const AuthenticatedBSlugOrdersIdRoute =
+  AuthenticatedBSlugOrdersIdRouteImport.update({
+    id: '/orders/$id',
+    path: '/orders/$id',
+    getParentRoute: () => AuthenticatedBSlugRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/brands': typeof AuthenticatedBrandsRoute
   '/campaigns': typeof AuthenticatedCampaignsRoute
   '/customers': typeof AuthenticatedCustomersRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/expenses': typeof AuthenticatedExpensesRoute
   '/inventory': typeof AuthenticatedInventoryRoute
+  '/orders': typeof AuthenticatedOrdersRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/team': typeof AuthenticatedTeamRoute
   '/invoice/$id': typeof InvoiceIdRoute
-  '/orders/$id': typeof AuthenticatedOrdersIdRoute
-  '/orders/': typeof AuthenticatedOrdersIndexRoute
+  '/store/$slug': typeof StoreSlugRoute
+  '/b/$slug': typeof AuthenticatedBSlugRouteRouteWithChildren
+  '/b/$slug/campaigns': typeof AuthenticatedBSlugCampaignsRoute
+  '/b/$slug/customers': typeof AuthenticatedBSlugCustomersRoute
+  '/b/$slug/dashboard': typeof AuthenticatedBSlugDashboardRoute
+  '/b/$slug/expenses': typeof AuthenticatedBSlugExpensesRoute
+  '/b/$slug/inventory': typeof AuthenticatedBSlugInventoryRoute
+  '/b/$slug/settings': typeof AuthenticatedBSlugSettingsRoute
+  '/b/$slug/team': typeof AuthenticatedBSlugTeamRoute
+  '/b/$slug/orders/$id': typeof AuthenticatedBSlugOrdersIdRoute
+  '/b/$slug/orders/': typeof AuthenticatedBSlugOrdersIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/brands': typeof AuthenticatedBrandsRoute
   '/campaigns': typeof AuthenticatedCampaignsRoute
   '/customers': typeof AuthenticatedCustomersRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/expenses': typeof AuthenticatedExpensesRoute
   '/inventory': typeof AuthenticatedInventoryRoute
+  '/orders': typeof AuthenticatedOrdersRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/team': typeof AuthenticatedTeamRoute
   '/invoice/$id': typeof InvoiceIdRoute
-  '/orders/$id': typeof AuthenticatedOrdersIdRoute
-  '/orders': typeof AuthenticatedOrdersIndexRoute
+  '/store/$slug': typeof StoreSlugRoute
+  '/b/$slug': typeof AuthenticatedBSlugRouteRouteWithChildren
+  '/b/$slug/campaigns': typeof AuthenticatedBSlugCampaignsRoute
+  '/b/$slug/customers': typeof AuthenticatedBSlugCustomersRoute
+  '/b/$slug/dashboard': typeof AuthenticatedBSlugDashboardRoute
+  '/b/$slug/expenses': typeof AuthenticatedBSlugExpensesRoute
+  '/b/$slug/inventory': typeof AuthenticatedBSlugInventoryRoute
+  '/b/$slug/settings': typeof AuthenticatedBSlugSettingsRoute
+  '/b/$slug/team': typeof AuthenticatedBSlugTeamRoute
+  '/b/$slug/orders/$id': typeof AuthenticatedBSlugOrdersIdRoute
+  '/b/$slug/orders': typeof AuthenticatedBSlugOrdersIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -140,16 +235,27 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/_authenticated/brands': typeof AuthenticatedBrandsRoute
   '/_authenticated/campaigns': typeof AuthenticatedCampaignsRoute
   '/_authenticated/customers': typeof AuthenticatedCustomersRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/expenses': typeof AuthenticatedExpensesRoute
   '/_authenticated/inventory': typeof AuthenticatedInventoryRoute
+  '/_authenticated/orders': typeof AuthenticatedOrdersRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/team': typeof AuthenticatedTeamRoute
   '/invoice/$id': typeof InvoiceIdRoute
-  '/_authenticated/orders/$id': typeof AuthenticatedOrdersIdRoute
-  '/_authenticated/orders/': typeof AuthenticatedOrdersIndexRoute
+  '/store/$slug': typeof StoreSlugRoute
+  '/_authenticated/b/$slug': typeof AuthenticatedBSlugRouteRouteWithChildren
+  '/_authenticated/b/$slug/campaigns': typeof AuthenticatedBSlugCampaignsRoute
+  '/_authenticated/b/$slug/customers': typeof AuthenticatedBSlugCustomersRoute
+  '/_authenticated/b/$slug/dashboard': typeof AuthenticatedBSlugDashboardRoute
+  '/_authenticated/b/$slug/expenses': typeof AuthenticatedBSlugExpensesRoute
+  '/_authenticated/b/$slug/inventory': typeof AuthenticatedBSlugInventoryRoute
+  '/_authenticated/b/$slug/settings': typeof AuthenticatedBSlugSettingsRoute
+  '/_authenticated/b/$slug/team': typeof AuthenticatedBSlugTeamRoute
+  '/_authenticated/b/$slug/orders/$id': typeof AuthenticatedBSlugOrdersIdRoute
+  '/_authenticated/b/$slug/orders/': typeof AuthenticatedBSlugOrdersIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -158,32 +264,54 @@ export interface FileRouteTypes {
     | '/auth'
     | '/forgot-password'
     | '/reset-password'
+    | '/brands'
     | '/campaigns'
     | '/customers'
     | '/dashboard'
     | '/expenses'
     | '/inventory'
+    | '/orders'
     | '/settings'
     | '/team'
     | '/invoice/$id'
-    | '/orders/$id'
-    | '/orders/'
+    | '/store/$slug'
+    | '/b/$slug'
+    | '/b/$slug/campaigns'
+    | '/b/$slug/customers'
+    | '/b/$slug/dashboard'
+    | '/b/$slug/expenses'
+    | '/b/$slug/inventory'
+    | '/b/$slug/settings'
+    | '/b/$slug/team'
+    | '/b/$slug/orders/$id'
+    | '/b/$slug/orders/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
     | '/forgot-password'
     | '/reset-password'
+    | '/brands'
     | '/campaigns'
     | '/customers'
     | '/dashboard'
     | '/expenses'
     | '/inventory'
+    | '/orders'
     | '/settings'
     | '/team'
     | '/invoice/$id'
-    | '/orders/$id'
-    | '/orders'
+    | '/store/$slug'
+    | '/b/$slug'
+    | '/b/$slug/campaigns'
+    | '/b/$slug/customers'
+    | '/b/$slug/dashboard'
+    | '/b/$slug/expenses'
+    | '/b/$slug/inventory'
+    | '/b/$slug/settings'
+    | '/b/$slug/team'
+    | '/b/$slug/orders/$id'
+    | '/b/$slug/orders'
   id:
     | '__root__'
     | '/'
@@ -191,16 +319,27 @@ export interface FileRouteTypes {
     | '/auth'
     | '/forgot-password'
     | '/reset-password'
+    | '/_authenticated/brands'
     | '/_authenticated/campaigns'
     | '/_authenticated/customers'
     | '/_authenticated/dashboard'
     | '/_authenticated/expenses'
     | '/_authenticated/inventory'
+    | '/_authenticated/orders'
     | '/_authenticated/settings'
     | '/_authenticated/team'
     | '/invoice/$id'
-    | '/_authenticated/orders/$id'
-    | '/_authenticated/orders/'
+    | '/store/$slug'
+    | '/_authenticated/b/$slug'
+    | '/_authenticated/b/$slug/campaigns'
+    | '/_authenticated/b/$slug/customers'
+    | '/_authenticated/b/$slug/dashboard'
+    | '/_authenticated/b/$slug/expenses'
+    | '/_authenticated/b/$slug/inventory'
+    | '/_authenticated/b/$slug/settings'
+    | '/_authenticated/b/$slug/team'
+    | '/_authenticated/b/$slug/orders/$id'
+    | '/_authenticated/b/$slug/orders/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -210,6 +349,7 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   InvoiceIdRoute: typeof InvoiceIdRoute
+  StoreSlugRoute: typeof StoreSlugRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -249,6 +389,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/store/$slug': {
+      id: '/store/$slug'
+      path: '/store/$slug'
+      fullPath: '/store/$slug'
+      preLoaderRoute: typeof StoreSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/invoice/$id': {
       id: '/invoice/$id'
       path: '/invoice/$id'
@@ -268,6 +415,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/orders': {
+      id: '/_authenticated/orders'
+      path: '/orders'
+      fullPath: '/orders'
+      preLoaderRoute: typeof AuthenticatedOrdersRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/inventory': {
@@ -305,45 +459,140 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCampaignsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/orders/': {
-      id: '/_authenticated/orders/'
-      path: '/orders'
-      fullPath: '/orders/'
-      preLoaderRoute: typeof AuthenticatedOrdersIndexRouteImport
+    '/_authenticated/brands': {
+      id: '/_authenticated/brands'
+      path: '/brands'
+      fullPath: '/brands'
+      preLoaderRoute: typeof AuthenticatedBrandsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/orders/$id': {
-      id: '/_authenticated/orders/$id'
-      path: '/orders/$id'
-      fullPath: '/orders/$id'
-      preLoaderRoute: typeof AuthenticatedOrdersIdRouteImport
+    '/_authenticated/b/$slug': {
+      id: '/_authenticated/b/$slug'
+      path: '/b/$slug'
+      fullPath: '/b/$slug'
+      preLoaderRoute: typeof AuthenticatedBSlugRouteRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/b/$slug/team': {
+      id: '/_authenticated/b/$slug/team'
+      path: '/team'
+      fullPath: '/b/$slug/team'
+      preLoaderRoute: typeof AuthenticatedBSlugTeamRouteImport
+      parentRoute: typeof AuthenticatedBSlugRouteRoute
+    }
+    '/_authenticated/b/$slug/settings': {
+      id: '/_authenticated/b/$slug/settings'
+      path: '/settings'
+      fullPath: '/b/$slug/settings'
+      preLoaderRoute: typeof AuthenticatedBSlugSettingsRouteImport
+      parentRoute: typeof AuthenticatedBSlugRouteRoute
+    }
+    '/_authenticated/b/$slug/inventory': {
+      id: '/_authenticated/b/$slug/inventory'
+      path: '/inventory'
+      fullPath: '/b/$slug/inventory'
+      preLoaderRoute: typeof AuthenticatedBSlugInventoryRouteImport
+      parentRoute: typeof AuthenticatedBSlugRouteRoute
+    }
+    '/_authenticated/b/$slug/expenses': {
+      id: '/_authenticated/b/$slug/expenses'
+      path: '/expenses'
+      fullPath: '/b/$slug/expenses'
+      preLoaderRoute: typeof AuthenticatedBSlugExpensesRouteImport
+      parentRoute: typeof AuthenticatedBSlugRouteRoute
+    }
+    '/_authenticated/b/$slug/dashboard': {
+      id: '/_authenticated/b/$slug/dashboard'
+      path: '/dashboard'
+      fullPath: '/b/$slug/dashboard'
+      preLoaderRoute: typeof AuthenticatedBSlugDashboardRouteImport
+      parentRoute: typeof AuthenticatedBSlugRouteRoute
+    }
+    '/_authenticated/b/$slug/customers': {
+      id: '/_authenticated/b/$slug/customers'
+      path: '/customers'
+      fullPath: '/b/$slug/customers'
+      preLoaderRoute: typeof AuthenticatedBSlugCustomersRouteImport
+      parentRoute: typeof AuthenticatedBSlugRouteRoute
+    }
+    '/_authenticated/b/$slug/campaigns': {
+      id: '/_authenticated/b/$slug/campaigns'
+      path: '/campaigns'
+      fullPath: '/b/$slug/campaigns'
+      preLoaderRoute: typeof AuthenticatedBSlugCampaignsRouteImport
+      parentRoute: typeof AuthenticatedBSlugRouteRoute
+    }
+    '/_authenticated/b/$slug/orders/': {
+      id: '/_authenticated/b/$slug/orders/'
+      path: '/orders'
+      fullPath: '/b/$slug/orders/'
+      preLoaderRoute: typeof AuthenticatedBSlugOrdersIndexRouteImport
+      parentRoute: typeof AuthenticatedBSlugRouteRoute
+    }
+    '/_authenticated/b/$slug/orders/$id': {
+      id: '/_authenticated/b/$slug/orders/$id'
+      path: '/orders/$id'
+      fullPath: '/b/$slug/orders/$id'
+      preLoaderRoute: typeof AuthenticatedBSlugOrdersIdRouteImport
+      parentRoute: typeof AuthenticatedBSlugRouteRoute
     }
   }
 }
 
+interface AuthenticatedBSlugRouteRouteChildren {
+  AuthenticatedBSlugCampaignsRoute: typeof AuthenticatedBSlugCampaignsRoute
+  AuthenticatedBSlugCustomersRoute: typeof AuthenticatedBSlugCustomersRoute
+  AuthenticatedBSlugDashboardRoute: typeof AuthenticatedBSlugDashboardRoute
+  AuthenticatedBSlugExpensesRoute: typeof AuthenticatedBSlugExpensesRoute
+  AuthenticatedBSlugInventoryRoute: typeof AuthenticatedBSlugInventoryRoute
+  AuthenticatedBSlugSettingsRoute: typeof AuthenticatedBSlugSettingsRoute
+  AuthenticatedBSlugTeamRoute: typeof AuthenticatedBSlugTeamRoute
+  AuthenticatedBSlugOrdersIdRoute: typeof AuthenticatedBSlugOrdersIdRoute
+  AuthenticatedBSlugOrdersIndexRoute: typeof AuthenticatedBSlugOrdersIndexRoute
+}
+
+const AuthenticatedBSlugRouteRouteChildren: AuthenticatedBSlugRouteRouteChildren =
+  {
+    AuthenticatedBSlugCampaignsRoute: AuthenticatedBSlugCampaignsRoute,
+    AuthenticatedBSlugCustomersRoute: AuthenticatedBSlugCustomersRoute,
+    AuthenticatedBSlugDashboardRoute: AuthenticatedBSlugDashboardRoute,
+    AuthenticatedBSlugExpensesRoute: AuthenticatedBSlugExpensesRoute,
+    AuthenticatedBSlugInventoryRoute: AuthenticatedBSlugInventoryRoute,
+    AuthenticatedBSlugSettingsRoute: AuthenticatedBSlugSettingsRoute,
+    AuthenticatedBSlugTeamRoute: AuthenticatedBSlugTeamRoute,
+    AuthenticatedBSlugOrdersIdRoute: AuthenticatedBSlugOrdersIdRoute,
+    AuthenticatedBSlugOrdersIndexRoute: AuthenticatedBSlugOrdersIndexRoute,
+  }
+
+const AuthenticatedBSlugRouteRouteWithChildren =
+  AuthenticatedBSlugRouteRoute._addFileChildren(
+    AuthenticatedBSlugRouteRouteChildren,
+  )
+
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedBrandsRoute: typeof AuthenticatedBrandsRoute
   AuthenticatedCampaignsRoute: typeof AuthenticatedCampaignsRoute
   AuthenticatedCustomersRoute: typeof AuthenticatedCustomersRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedExpensesRoute: typeof AuthenticatedExpensesRoute
   AuthenticatedInventoryRoute: typeof AuthenticatedInventoryRoute
+  AuthenticatedOrdersRoute: typeof AuthenticatedOrdersRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedTeamRoute: typeof AuthenticatedTeamRoute
-  AuthenticatedOrdersIdRoute: typeof AuthenticatedOrdersIdRoute
-  AuthenticatedOrdersIndexRoute: typeof AuthenticatedOrdersIndexRoute
+  AuthenticatedBSlugRouteRoute: typeof AuthenticatedBSlugRouteRouteWithChildren
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedBrandsRoute: AuthenticatedBrandsRoute,
   AuthenticatedCampaignsRoute: AuthenticatedCampaignsRoute,
   AuthenticatedCustomersRoute: AuthenticatedCustomersRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedExpensesRoute: AuthenticatedExpensesRoute,
   AuthenticatedInventoryRoute: AuthenticatedInventoryRoute,
+  AuthenticatedOrdersRoute: AuthenticatedOrdersRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedTeamRoute: AuthenticatedTeamRoute,
-  AuthenticatedOrdersIdRoute: AuthenticatedOrdersIdRoute,
-  AuthenticatedOrdersIndexRoute: AuthenticatedOrdersIndexRoute,
+  AuthenticatedBSlugRouteRoute: AuthenticatedBSlugRouteRouteWithChildren,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -356,7 +605,18 @@ const rootRouteChildren: RootRouteChildren = {
   ForgotPasswordRoute: ForgotPasswordRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   InvoiceIdRoute: InvoiceIdRoute,
+  StoreSlugRoute: StoreSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

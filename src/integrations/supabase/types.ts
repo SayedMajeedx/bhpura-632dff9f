@@ -17,7 +17,7 @@ export type Database = {
       activity_logs: {
         Row: {
           action: string
-          brand_id: string | null
+          brand_id: string
           created_at: string
           id: string
           message_ar: string
@@ -30,7 +30,7 @@ export type Database = {
         }
         Insert: {
           action: string
-          brand_id?: string | null
+          brand_id: string
           created_at?: string
           id?: string
           message_ar: string
@@ -43,7 +43,7 @@ export type Database = {
         }
         Update: {
           action?: string
-          brand_id?: string | null
+          brand_id?: string
           created_at?: string
           id?: string
           message_ar?: string
@@ -55,6 +55,13 @@ export type Database = {
           variant_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "activity_logs_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "activity_logs_order_id_fkey"
             columns: ["order_id"]
@@ -78,11 +85,47 @@ export type Database = {
           },
         ]
       }
+      brands: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          logo_url: string | null
+          name_ar: string | null
+          name_en: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          name_ar?: string | null
+          name_en: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          name_ar?: string | null
+          name_en?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       business_settings: {
         Row: {
           address: string | null
           background_color: string
-          brand_id: string | null
+          brand_id: string
           business_name: string
           created_at: string
           currency: string
@@ -109,7 +152,7 @@ export type Database = {
         Insert: {
           address?: string | null
           background_color?: string
-          brand_id?: string | null
+          brand_id: string
           business_name?: string
           created_at?: string
           currency?: string
@@ -136,7 +179,7 @@ export type Database = {
         Update: {
           address?: string | null
           background_color?: string
-          brand_id?: string | null
+          brand_id?: string
           business_name?: string
           created_at?: string
           currency?: string
@@ -160,10 +203,19 @@ export type Database = {
           user_id?: string
           vat_number?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "business_settings_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       customer_addresses: {
         Row: {
+          brand_id: string
           created_at: string
           customer_id: string
           flat: string | null
@@ -177,6 +229,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          brand_id: string
           created_at?: string
           customer_id: string
           flat?: string | null
@@ -190,6 +243,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          brand_id?: string
           created_at?: string
           customer_id?: string
           flat?: string | null
@@ -204,6 +258,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "customer_addresses_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "customer_addresses_customer_id_fkey"
             columns: ["customer_id"]
             isOneToOne: false
@@ -215,7 +276,7 @@ export type Database = {
       customers: {
         Row: {
           address: string | null
-          brand_id: string | null
+          brand_id: string
           city: string | null
           created_at: string
           email: string | null
@@ -232,7 +293,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
-          brand_id?: string | null
+          brand_id: string
           city?: string | null
           created_at?: string
           email?: string | null
@@ -249,7 +310,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
-          brand_id?: string | null
+          brand_id?: string
           city?: string | null
           created_at?: string
           email?: string | null
@@ -264,10 +325,19 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "customers_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       customization_options: {
         Row: {
+          brand_id: string
           created_at: string
           id: string
           name: string
@@ -275,6 +345,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          brand_id: string
           created_at?: string
           id?: string
           name: string
@@ -282,18 +353,27 @@ export type Database = {
           user_id: string
         }
         Update: {
+          brand_id?: string
           created_at?: string
           id?: string
           name?: string
           price_delta?: number
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "customization_options_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       expenses: {
         Row: {
           amount: number
-          brand_id: string | null
+          brand_id: string
           category: string
           created_at: string
           currency: string
@@ -306,7 +386,7 @@ export type Database = {
         }
         Insert: {
           amount?: number
-          brand_id?: string | null
+          brand_id: string
           category: string
           created_at?: string
           currency?: string
@@ -319,7 +399,7 @@ export type Database = {
         }
         Update: {
           amount?: number
-          brand_id?: string | null
+          brand_id?: string
           category?: string
           created_at?: string
           currency?: string
@@ -330,12 +410,20 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "expenses_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       message_templates: {
         Row: {
           body: string
-          brand_id: string | null
+          brand_id: string
           channel: string
           created_at: string
           id: string
@@ -347,7 +435,7 @@ export type Database = {
         }
         Insert: {
           body: string
-          brand_id?: string | null
+          brand_id: string
           channel?: string
           created_at?: string
           id?: string
@@ -359,7 +447,7 @@ export type Database = {
         }
         Update: {
           body?: string
-          brand_id?: string | null
+          brand_id?: string
           channel?: string
           created_at?: string
           id?: string
@@ -369,10 +457,19 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "message_templates_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       order_items: {
         Row: {
+          brand_id: string
           created_at: string
           customization_total: number
           customizations: Json
@@ -388,6 +485,7 @@ export type Database = {
           variant_id: string | null
         }
         Insert: {
+          brand_id: string
           created_at?: string
           customization_total?: number
           customizations?: Json
@@ -403,6 +501,7 @@ export type Database = {
           variant_id?: string | null
         }
         Update: {
+          brand_id?: string
           created_at?: string
           customization_total?: number
           customizations?: Json
@@ -418,6 +517,13 @@ export type Database = {
           variant_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "order_items_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "order_items_order_id_fkey"
             columns: ["order_id"]
@@ -444,7 +550,7 @@ export type Database = {
       orders: {
         Row: {
           advance_paid: number
-          brand_id: string | null
+          brand_id: string
           created_at: string
           currency: string
           customer_id: string | null
@@ -469,7 +575,7 @@ export type Database = {
         }
         Insert: {
           advance_paid?: number
-          brand_id?: string | null
+          brand_id: string
           created_at?: string
           currency?: string
           customer_id?: string | null
@@ -494,7 +600,7 @@ export type Database = {
         }
         Update: {
           advance_paid?: number
-          brand_id?: string | null
+          brand_id?: string
           created_at?: string
           currency?: string
           customer_id?: string | null
@@ -519,6 +625,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "orders_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "orders_customer_id_fkey"
             columns: ["customer_id"]
             isOneToOne: false
@@ -537,7 +650,7 @@ export type Database = {
       product_variants: {
         Row: {
           barcode: string | null
-          brand_id: string | null
+          brand_id: string
           color: string | null
           cost_price: number
           created_at: string
@@ -555,7 +668,7 @@ export type Database = {
         }
         Insert: {
           barcode?: string | null
-          brand_id?: string | null
+          brand_id: string
           color?: string | null
           cost_price?: number
           created_at?: string
@@ -573,7 +686,7 @@ export type Database = {
         }
         Update: {
           barcode?: string | null
-          brand_id?: string | null
+          brand_id?: string
           color?: string | null
           cost_price?: number
           created_at?: string
@@ -591,6 +704,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "product_variants_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "product_variants_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
@@ -601,7 +721,7 @@ export type Database = {
       }
       products: {
         Row: {
-          brand_id: string | null
+          brand_id: string
           category: string | null
           created_at: string
           description: string | null
@@ -612,7 +732,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          brand_id?: string | null
+          brand_id: string
           category?: string | null
           created_at?: string
           description?: string | null
@@ -623,7 +743,7 @@ export type Database = {
           user_id: string
         }
         Update: {
-          brand_id?: string | null
+          brand_id?: string
           category?: string | null
           created_at?: string
           description?: string | null
@@ -633,7 +753,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "products_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -666,15 +794,26 @@ export type Database = {
           status?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      can_access_brand: { Args: { _brand_id: string }; Returns: boolean }
+      current_brand_id: { Args: never; Returns: string }
       is_active: { Args: never; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
+      is_brand_admin: { Args: never; Returns: boolean }
       is_super_admin: { Args: never; Returns: boolean }
       sync_order_stock: { Args: { p_order_id: string }; Returns: undefined }
     }
