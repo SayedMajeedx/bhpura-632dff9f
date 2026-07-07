@@ -52,7 +52,7 @@ type SavedAddress = {
 };
 
 
-export const Route = createFileRoute("/_authenticated/orders/$id")({
+export const Route = createFileRoute("/_authenticated/b/$slug/orders/$id")({
   component: OrderDetail,
 });
 

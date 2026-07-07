@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { useT } from "@/lib/i18n";
 import { resolvePaymentStatus, PAYMENT_BADGE_CLASSES } from "@/lib/payment-status";
 
-export const Route = createFileRoute("/_authenticated/orders/")({
+export const Route = createFileRoute("/_authenticated/b/$slug/orders/")({
   component: OrdersList,
 });
 
