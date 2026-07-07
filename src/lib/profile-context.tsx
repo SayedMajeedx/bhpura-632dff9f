@@ -32,16 +32,19 @@ type ProfileContextType = {
 
 const ProfileContext = createContext<ProfileContextType | null>(null);
 
-// Fallback profile for users without a profile record (treat as active admin)
+// Fallback profile for users without a profile record (treat as active admin,
+// or super_admin if the email matches the fixed super admin).
 const createFallbackProfile = (userId: string, email: string): Profile => ({
   id: userId,
   email,
   name: null,
-  role: "admin",
+  role: email.toLowerCase() === SUPER_ADMIN_EMAIL ? "super_admin" : "admin",
   status: "active",
+  brand_id: null,
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
 });
+
 
 export function ProfileProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
