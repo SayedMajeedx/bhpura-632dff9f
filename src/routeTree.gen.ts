@@ -14,7 +14,6 @@ import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as StoreSlugRouteImport } from './routes/store.$slug'
 import { Route as InvoiceIdRouteImport } from './routes/invoice.$id'
 import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/team'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
@@ -58,11 +57,6 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const StoreSlugRoute = StoreSlugRouteImport.update({
-  id: '/store/$slug',
-  path: '/store/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InvoiceIdRoute = InvoiceIdRouteImport.update({
@@ -189,7 +183,6 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRoute
   '/team': typeof AuthenticatedTeamRoute
   '/invoice/$id': typeof InvoiceIdRoute
-  '/store/$slug': typeof StoreSlugRoute
   '/b/$slug': typeof AuthenticatedBSlugRouteRouteWithChildren
   '/b/$slug/campaigns': typeof AuthenticatedBSlugCampaignsRoute
   '/b/$slug/customers': typeof AuthenticatedBSlugCustomersRoute
@@ -216,7 +209,6 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsRoute
   '/team': typeof AuthenticatedTeamRoute
   '/invoice/$id': typeof InvoiceIdRoute
-  '/store/$slug': typeof StoreSlugRoute
   '/b/$slug': typeof AuthenticatedBSlugRouteRouteWithChildren
   '/b/$slug/campaigns': typeof AuthenticatedBSlugCampaignsRoute
   '/b/$slug/customers': typeof AuthenticatedBSlugCustomersRoute
@@ -245,7 +237,6 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/team': typeof AuthenticatedTeamRoute
   '/invoice/$id': typeof InvoiceIdRoute
-  '/store/$slug': typeof StoreSlugRoute
   '/_authenticated/b/$slug': typeof AuthenticatedBSlugRouteRouteWithChildren
   '/_authenticated/b/$slug/campaigns': typeof AuthenticatedBSlugCampaignsRoute
   '/_authenticated/b/$slug/customers': typeof AuthenticatedBSlugCustomersRoute
@@ -274,7 +265,6 @@ export interface FileRouteTypes {
     | '/settings'
     | '/team'
     | '/invoice/$id'
-    | '/store/$slug'
     | '/b/$slug'
     | '/b/$slug/campaigns'
     | '/b/$slug/customers'
@@ -301,7 +291,6 @@ export interface FileRouteTypes {
     | '/settings'
     | '/team'
     | '/invoice/$id'
-    | '/store/$slug'
     | '/b/$slug'
     | '/b/$slug/campaigns'
     | '/b/$slug/customers'
@@ -329,7 +318,6 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/_authenticated/team'
     | '/invoice/$id'
-    | '/store/$slug'
     | '/_authenticated/b/$slug'
     | '/_authenticated/b/$slug/campaigns'
     | '/_authenticated/b/$slug/customers'
@@ -349,7 +337,6 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   InvoiceIdRoute: typeof InvoiceIdRoute
-  StoreSlugRoute: typeof StoreSlugRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -387,13 +374,6 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/store/$slug': {
-      id: '/store/$slug'
-      path: '/store/$slug'
-      fullPath: '/store/$slug'
-      preLoaderRoute: typeof StoreSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/invoice/$id': {
@@ -605,7 +585,6 @@ const rootRouteChildren: RootRouteChildren = {
   ForgotPasswordRoute: ForgotPasswordRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   InvoiceIdRoute: InvoiceIdRoute,
-  StoreSlugRoute: StoreSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
