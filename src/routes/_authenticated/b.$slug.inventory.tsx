@@ -18,6 +18,7 @@ import { useProfile } from "@/lib/profile-context";
 import { useBrand } from "@/lib/brand-context";
 import { useRealtimeInvalidate } from "@/hooks/use-realtime-invalidate";
 import { Switch } from "@/components/ui/switch";
+import { ImageCropperDialog } from "@/components/image-cropper-dialog";
 
 export const Route = createFileRoute("/_authenticated/b/$slug/inventory")({
   component: Inventory,
