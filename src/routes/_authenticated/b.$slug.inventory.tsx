@@ -431,7 +431,19 @@ function ProductDialog({ product, onSaved }: { product: Product | null; onSaved:
     <DialogContent className="max-h-[90vh] overflow-y-auto">
       <DialogHeader><DialogTitle>{product ? t("inventory.editProduct") : t("inventory.newProduct")}</DialogTitle></DialogHeader>
       <div className="space-y-3">
-        <div><Label>{t("inventory.name")}</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
+        <BilingualField
+          labelAr="اسم المنتج — عربي"
+          labelEn="Product name — English"
+          valueAr={form.name_ar}
+          valueEn={form.name_en}
+          onChangeAr={(v) => setForm({ ...form, name_ar: v })}
+          onChangeEn={(v) => setForm({ ...form, name_en: v })}
+          isAr={isAr}
+          translatingArToEn={translatingName === "ar->en"}
+          translatingEnToAr={translatingName === "en->ar"}
+          onTranslateArToEn={() => runTranslate("name", "ar->en")}
+          onTranslateEnToAr={() => runTranslate("name", "en->ar")}
+        />
         <div>
           <Label>{t("inventory.category")}</Label>
           {(categoriesQ.data ?? []).length > 0 ? (
@@ -457,7 +469,20 @@ function ProductDialog({ product, onSaved }: { product: Product | null; onSaved:
           )}
         </div>
         <div><Label>{t("inventory.imageUrl")}</Label><Input value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} /></div>
-        <div><Label>{t("inventory.description")}</Label><Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
+        <BilingualField
+          multiline
+          labelAr="الوصف — عربي"
+          labelEn="Description — English"
+          valueAr={form.description_ar}
+          valueEn={form.description_en}
+          onChangeAr={(v) => setForm({ ...form, description_ar: v })}
+          onChangeEn={(v) => setForm({ ...form, description_en: v })}
+          isAr={isAr}
+          translatingArToEn={translatingDesc === "ar->en"}
+          translatingEnToAr={translatingDesc === "en->ar"}
+          onTranslateArToEn={() => runTranslate("description", "ar->en")}
+          onTranslateEnToAr={() => runTranslate("description", "en->ar")}
+        />
 
         <div className="flex items-center justify-between rounded-md border border-border p-3">
           <div>
