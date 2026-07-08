@@ -419,8 +419,44 @@ function CartDrawer({ children }: { children: React.ReactNode }) {
   );
 }
 
+function SearchBar() {
+  const { brand, lang, t } = useStorefront();
+  const navigate = useNavigate();
+  const [q, setQ] = useState("");
+  return (
+    <form
+      role="search"
+      onSubmit={(e) => {
+        e.preventDefault();
+        const query = q.trim();
+        if (!query) return;
+        navigate({ to: "/store/$slug/search", params: { slug: brand.slug }, search: { q: query } });
+      }}
+      className="relative w-full"
+    >
+      <Search className={`absolute top-1/2 -translate-y-1/2 h-4 w-4 opacity-60 ${lang === "ar" ? "right-3" : "left-3"}`} />
+      <Input
+        value={q}
+        onChange={(e) => setQ(e.target.value)}
+        placeholder={t("ابحث عن منتج...", "Search for products...")}
+        className={`h-10 bg-white/70 dark:bg-black/20 border-black/10 ${lang === "ar" ? "pr-9" : "pl-9"}`}
+        inputMode="search"
+        enterKeyHint="search"
+        aria-label={t("ابحث عن منتج", "Search products")}
+      />
+    </form>
+  );
+}
+
 function StoreFooter() {
   const { settings, t, brand, lang } = useStorefront();
+  const pageLinks = settings.pages
+    .map((p, i) => ({
+      idx: i + 1,
+      title: lang === "ar" ? (p.title_ar || p.title_en) : (p.title_en || p.title_ar),
+      hasContent: Boolean(p.title_ar || p.title_en),
+    }))
+    .filter((p) => p.hasContent && p.title);
   return (
     <footer
       className="border-t mt-16 py-8"
@@ -430,10 +466,25 @@ function StoreFooter() {
         color: "var(--sf-footer-fg)",
       }}
     >
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 text-center text-sm space-y-1" style={{ color: "var(--sf-footer-fg)" }}>
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 text-center text-sm space-y-3" style={{ color: "var(--sf-footer-fg)" }}>
         <div className="font-medium" style={{ color: "var(--sf-heading)" }}>
           {lang === "ar" ? brand.name_ar || brand.name_en : brand.name_en}
         </div>
+        {pageLinks.length > 0 && (
+          <nav className="flex flex-wrap justify-center gap-x-4 gap-y-2">
+            {pageLinks.map((p) => (
+              <Link
+                key={p.idx}
+                to="/store/$slug/page/$idx"
+                params={{ slug: brand.slug, idx: String(p.idx) }}
+                className="underline-offset-2 hover:underline"
+                style={{ color: "var(--sf-link)" }}
+              >
+                {p.title}
+              </Link>
+            ))}
+          </nav>
+        )}
         {settings.footer_note && <div>{settings.footer_note}</div>}
         <div>© {new Date().getFullYear()} — {t("جميع الحقوق محفوظة", "All rights reserved")}</div>
       </div>
