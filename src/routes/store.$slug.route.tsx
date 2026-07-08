@@ -520,6 +520,7 @@ function SearchBar() {
           {!isFetching && results.length > 0 && (
             <ul className="divide-y" style={{ borderColor: "rgba(0,0,0,0.06)" }}>
               {results.map((p) => {
+                const displayName = pickName(lang, p);
                 const price = p.product_variants?.[0]?.selling_price ?? 0;
                 return (
                   <li key={p.id}>
@@ -531,11 +532,11 @@ function SearchBar() {
                     >
                       <div className="h-12 w-12 shrink-0 rounded bg-muted overflow-hidden">
                         {p.image_url && (
-                          <img src={p.image_url} alt={p.name} className="h-full w-full object-cover" />
+                          <img src={p.image_url} alt={displayName} className="h-full w-full object-cover" />
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium truncate">{p.name}</div>
+                        <div className="text-sm font-medium truncate">{displayName}</div>
                         <div className="text-xs" style={{ color: "var(--sf-heading)" }}>
                           {formatPrice(Number(price), currency, lang)}
                         </div>
