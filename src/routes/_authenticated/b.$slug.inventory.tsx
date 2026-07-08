@@ -413,12 +413,25 @@ function ProductDialog({ product, onSaved }: { product: Product | null; onSaved:
                 type="file"
                 accept="image/*,video/*"
                 className="hidden"
-                onChange={(e) => e.target.files?.[0] && uploadMedia(e.target.files[0])}
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) handleFilePicked(f);
+                  e.currentTarget.value = "";
+                }}
               />
             </label>
           </div>
         </div>
       </div>
+      <ImageCropperDialog
+        open={!!cropSrc}
+        imageSrc={cropSrc}
+        aspect={3 / 4}
+        busy={uploading}
+        onCancel={() => setCropSrc(null)}
+        onConfirm={handleCropConfirmed}
+      />
+      {pendingVideo && null}
       <DialogFooter><Button onClick={save}>{t("common.save")}</Button></DialogFooter>
     </DialogContent>
   );
