@@ -348,7 +348,7 @@ function CartDrawer({ children }: { children: React.ReactNode }) {
             </div>
             <Button
               className="w-full h-12"
-              style={{ backgroundColor: settings.primary_color, color: "#fff" }}
+              style={{ backgroundColor: "var(--sf-btn-primary-bg)", color: "var(--sf-btn-primary-fg)" }}
               onClick={() => {
                 setOpen(false);
                 navigate({ to: "/store/$slug/checkout", params: { slug: brand.slug } });
