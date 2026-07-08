@@ -31,9 +31,10 @@ function StorefrontAuth() {
     try {
       await supabase.rpc("link_storefront_customer", {
         p_brand_slug: brand.slug,
-        p_name: name || null,
-        p_phone: phone || null,
+        p_name: name || undefined,
+        p_phone: phone || undefined,
       });
+
     } catch (e) {
       console.error("link customer failed", e);
     }
