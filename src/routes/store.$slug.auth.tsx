@@ -106,6 +106,45 @@ function StorefrontAuth() {
           </p>
         </div>
 
+        {pendingVerification && (
+          <div
+            className="rounded-lg border p-4 flex gap-3 items-start"
+            style={{
+              borderColor: settings.primary_color,
+              backgroundColor: `${settings.primary_color}10`,
+              color: settings.text_color,
+            }}
+            role="status"
+            aria-live="polite"
+          >
+            <MailCheck className="h-5 w-5 mt-0.5 shrink-0" style={{ color: settings.primary_color }} />
+            <div className="text-sm space-y-1">
+              <div className="font-semibold">
+                {t("تحقّق من بريدك الإلكتروني", "Check your email")}
+              </div>
+              <div>
+                {t(
+                  "أرسلنا رسالة تفعيل إلى",
+                  "We've sent a verification link to",
+                )}{" "}
+                <span className="font-mono">{pendingVerification}</span>.{" "}
+                {t(
+                  "افتح الرسالة واضغط على الرابط لتفعيل حسابك ثم عُد لتسجيل الدخول.",
+                  "Open it and click the link to activate your account, then come back to sign in.",
+                )}
+              </div>
+              <button
+                type="button"
+                className="mt-1 underline text-xs"
+                onClick={() => { setPendingVerification(null); setTab("signin"); }}
+              >
+                {t("تسجيل الدخول الآن", "Go to sign in")}
+              </button>
+            </div>
+          </div>
+        )}
+
+
         <Tabs value={tab} onValueChange={(v) => setTab(v as any)}>
           <TabsList className="grid grid-cols-2 w-full">
             <TabsTrigger value="signin">{t("تسجيل الدخول", "Sign in")}</TabsTrigger>
