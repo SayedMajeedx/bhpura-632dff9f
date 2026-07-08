@@ -76,7 +76,10 @@ function StoreHome() {
   const filtered = useMemo(() => {
     const list = products ?? [];
     if (!activeCat) return list;
-    return list.filter((p) => p.category === activeCat);
+    const match = list.filter((p) => p.category === activeCat);
+    // Fallback: if the selected category filters to zero (e.g. legacy category name mismatch),
+    // show the full list rather than a misleading "no products" screen.
+    return match.length > 0 ? match : list;
   }, [products, activeCat]);
 
   return (
