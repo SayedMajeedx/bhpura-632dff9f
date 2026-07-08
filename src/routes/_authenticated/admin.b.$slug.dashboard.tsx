@@ -8,7 +8,7 @@ import { useI18n, useT } from "@/lib/i18n";
 import { useProfile } from "@/lib/profile-context";
 import { useBrand } from "@/lib/brand-context";
 
-export const Route = createFileRoute("/_authenticated/b/$slug/dashboard")({
+export const Route = createFileRoute("/_authenticated/admin/b/$slug/dashboard")({
   component: Dashboard,
 });
 
@@ -216,7 +216,7 @@ function Dashboard() {
             <ul className="divide-y divide-border">
               {data!.recent.map((o: any) => (
                 <li key={o.id} className="py-3 flex items-center justify-between gap-3 text-sm">
-                  <Link to="/b/$slug/orders/$id" params={{ slug, id: o.id }} className="min-w-0 truncate">
+                  <Link to="/admin/b/$slug/orders/$id" params={{ slug, id: o.id }} className="min-w-0 truncate">
                     <span className="text-primary font-medium">#{o.invoice_number}</span>
                     <span className="text-muted-foreground"> · {new Date(o.created_at).toLocaleDateString(locale)}</span>
                     {o.customers?.name && (

@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import { useI18n, useT } from "@/lib/i18n";
 import { SUPER_ADMIN_EMAIL } from "@/lib/profile-context";
 
-export const Route = createFileRoute("/_authenticated/brands")({
+export const Route = createFileRoute("/_authenticated/admin/brands")({
   beforeLoad: async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw redirect({ to: "/auth" });
@@ -25,7 +25,7 @@ export const Route = createFileRoute("/_authenticated/brands")({
       .eq("id", user.id)
       .maybeSingle();
     const isSuperAdmin = email === SUPER_ADMIN_EMAIL || profile?.role === "super_admin";
-    if (!isSuperAdmin) throw redirect({ to: "/dashboard" });
+    if (!isSuperAdmin) throw redirect({ to: "/admin" });
   },
   component: BrandsPage,
 });
@@ -123,12 +123,12 @@ function BrandsPage() {
               </div>
               <div className="flex flex-wrap gap-2">
                 <Button asChild variant="secondary" size="sm">
-                  <Link to="/b/$slug/dashboard" params={{ slug: b.slug }}>
+                  <Link to="/admin/b/$slug/dashboard" params={{ slug: b.slug }}>
                     {lang === "ar" ? "فتح لوحة التحكم" : "Open workspace"}
                   </Link>
                 </Button>
                 <Button asChild variant="outline" size="sm">
-                  <Link to="/store/$slug" params={{ slug: b.slug }}>
+                  <Link to="/$slug" params={{ slug: b.slug }}>
                     <ExternalLink className="h-3.5 w-3.5 me-1.5" />
                     {lang === "ar" ? "المتجر" : "Storefront"}
                   </Link>
@@ -237,8 +237,8 @@ function NewBrandDialog({ onSaved }: { onSaved: () => void }) {
           />
           <p className="text-xs text-muted-foreground mt-1">
             {lang === "ar"
-              ? "يُكتب يدويًا ولا يُشتق من الاسم. سيظهر في /b/{المعرّف} و /store/{المعرّف}."
-              : "Typed manually — never auto-generated from the name. Used in /b/{slug} and /store/{slug}."}
+              ? "يُكتب يدويًا ولا يُشتق من الاسم. سيظهر في /admin/b/{المعرّف} و /{المعرّف}."
+              : "Typed manually — never auto-generated from the name. Used in /admin/b/{slug} and /{slug}."}
           </p>
         </div>
         <div>

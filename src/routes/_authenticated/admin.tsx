@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
  * - brand admin / staff → /b/{their-slug}/dashboard
  * - anyone without a brand assignment → /brands (super admin) or /auth (with a message)
  */
-export const Route = createFileRoute("/_authenticated/dashboard")({
+export const Route = createFileRoute("/_authenticated/admin")({
   beforeLoad: async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw redirect({ to: "/auth" });
@@ -32,13 +32,13 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
         .eq("id", profile.brand_id)
         .maybeSingle();
       if (brand?.slug) {
-        throw redirect({ to: "/b/$slug/dashboard", params: { slug: brand.slug } });
+        throw redirect({ to: "/admin/b/$slug/dashboard", params: { slug: brand.slug } });
       }
     }
 
     // Super admin without an assigned brand → /brands
     if (isSuperAdmin) {
-      throw redirect({ to: "/brands" });
+      throw redirect({ to: "/admin/brands" });
     }
 
     // Fallback: try the default 'pura' brand
@@ -48,7 +48,7 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
       .eq("slug", "pura")
       .maybeSingle();
     if (fallback?.slug) {
-      throw redirect({ to: "/b/$slug/dashboard", params: { slug: fallback.slug } });
+      throw redirect({ to: "/admin/b/$slug/dashboard", params: { slug: fallback.slug } });
     }
 
     throw redirect({ to: "/auth" });

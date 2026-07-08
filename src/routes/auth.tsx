@@ -58,7 +58,7 @@ function AuthPage() {
       }
       // Small delay to ensure session is persisted
       await new Promise((r) => setTimeout(r, 100));
-      navigate({ to: "/dashboard" });
+      navigate({ to: "/admin" });
     } catch (err: any) {
       toast.error(translateAuthError(err, lang as any));
     } finally {

@@ -14,7 +14,7 @@ import { formatMoney } from "@/lib/format";
 import { useI18n, useT } from "@/lib/i18n";
 import { useBrand } from "@/lib/brand-context";
 
-export const Route = createFileRoute("/_authenticated/b/$slug/expenses")({
+export const Route = createFileRoute("/_authenticated/admin/b/$slug/expenses")({
   beforeLoad: async ({ params }) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw redirect({ to: "/auth" });
@@ -34,7 +34,7 @@ export const Route = createFileRoute("/_authenticated/b/$slug/expenses")({
       ((role === "admin" || role === "super_admin" || role === "brand_admin") && status === "active");
 
     if (!allowed) {
-      throw redirect({ to: "/b/$slug/dashboard", params: { slug: params.slug } });
+      throw redirect({ to: "/admin/b/$slug/dashboard", params: { slug: params.slug } });
     }
   },
   component: ExpensesPage,

@@ -11,7 +11,7 @@ import { resolvePaymentStatus, PAYMENT_BADGE_CLASSES } from "@/lib/payment-statu
 import { useBrand } from "@/lib/brand-context";
 import { useRealtimeInvalidate } from "@/hooks/use-realtime-invalidate";
 
-export const Route = createFileRoute("/_authenticated/b/$slug/orders/")({
+export const Route = createFileRoute("/_authenticated/admin/b/$slug/orders/")({
   component: OrdersList,
 });
 
@@ -81,7 +81,7 @@ function OrdersList() {
     }).select().single();
     if (error) return toast.error(error.message);
     await supabase.from("business_settings").update({ next_invoice_number: nextNum + 1 }).eq("brand_id", brandId);
-    navigate({ to: "/b/$slug/orders/$id", params: { slug, id: order.id } });
+    navigate({ to: "/admin/b/$slug/orders/$id", params: { slug, id: order.id } });
   };
 
   const del = async (id: string) => {
@@ -124,7 +124,7 @@ function OrdersList() {
               {data!.map((o) => (
                 <tr key={o.id} className="border-t border-border hover:bg-secondary/30">
                   <td className="p-4">
-                    <Link to="/b/$slug/orders/$id" params={{ slug, id: o.id }} className="text-primary font-medium">
+                    <Link to="/admin/b/$slug/orders/$id" params={{ slug, id: o.id }} className="text-primary font-medium">
                       #{o.invoice_number}
                     </Link>
                   </td>

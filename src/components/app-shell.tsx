@@ -56,20 +56,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     const items: { to: string; params?: any; label: string; icon: typeof LayoutDashboard; adminOnly?: boolean }[] = [];
     if (activeSlug) {
       items.push(
-        { to: "/b/$slug/dashboard", params: { slug: activeSlug }, label: t("nav.dashboard"), icon: LayoutDashboard },
-        { to: "/b/$slug/inventory", params: { slug: activeSlug }, label: t("nav.inventory"), icon: Package },
-        { to: "/b/$slug/categories", params: { slug: activeSlug }, label: lang === "ar" ? "الأقسام" : "Categories", icon: Tags },
-        { to: "/b/$slug/customers", params: { slug: activeSlug }, label: t("nav.customers"), icon: Users },
-        { to: "/b/$slug/campaigns", params: { slug: activeSlug }, label: lang === "ar" ? "حملات الواتساب" : "WhatsApp Campaigns", icon: Megaphone },
-        { to: "/b/$slug/orders", params: { slug: activeSlug }, label: t("nav.orders"), icon: ReceiptText },
-        { to: "/b/$slug/expenses", params: { slug: activeSlug }, label: t("nav.expenses"), icon: Wallet, adminOnly: true },
+        { to: "/admin/b/$slug/dashboard", params: { slug: activeSlug }, label: t("nav.dashboard"), icon: LayoutDashboard },
+        { to: "/admin/b/$slug/inventory", params: { slug: activeSlug }, label: t("nav.inventory"), icon: Package },
+        { to: "/admin/b/$slug/categories", params: { slug: activeSlug }, label: lang === "ar" ? "الأقسام" : "Categories", icon: Tags },
+        { to: "/admin/b/$slug/customers", params: { slug: activeSlug }, label: t("nav.customers"), icon: Users },
+        { to: "/admin/b/$slug/campaigns", params: { slug: activeSlug }, label: lang === "ar" ? "حملات الواتساب" : "WhatsApp Campaigns", icon: Megaphone },
+        { to: "/admin/b/$slug/orders", params: { slug: activeSlug }, label: t("nav.orders"), icon: ReceiptText },
+        { to: "/admin/b/$slug/expenses", params: { slug: activeSlug }, label: t("nav.expenses"), icon: Wallet, adminOnly: true },
       );
       if (isAdmin) {
-        items.push({ to: "/b/$slug/team", params: { slug: activeSlug }, label: lang === "ar" ? "إدارة الموظفين" : "Team Management", icon: Shield });
-        items.push({ to: "/b/$slug/integrations", params: { slug: activeSlug }, label: t("nav.integrations"), icon: Plug });
+        items.push({ to: "/admin/b/$slug/team", params: { slug: activeSlug }, label: lang === "ar" ? "إدارة الموظفين" : "Team Management", icon: Shield });
+        items.push({ to: "/admin/b/$slug/integrations", params: { slug: activeSlug }, label: t("nav.integrations"), icon: Plug });
       }
-      items.push({ to: "/b/$slug/pages", params: { slug: activeSlug }, label: lang === "ar" ? "الصفحات والسياسات" : "Pages & Policies", icon: FileText });
-      items.push({ to: "/b/$slug/settings", params: { slug: activeSlug }, label: t("nav.settings"), icon: Settings });
+      items.push({ to: "/admin/b/$slug/pages", params: { slug: activeSlug }, label: lang === "ar" ? "الصفحات والسياسات" : "Pages & Policies", icon: FileText });
+      items.push({ to: "/admin/b/$slug/settings", params: { slug: activeSlug }, label: t("nav.settings"), icon: Settings });
 
     }
     return items.filter((item) => !item.adminOnly || isAdmin);
@@ -97,7 +97,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
           <Select
             value={activeSlug ?? ""}
-            onValueChange={(v) => navigate({ to: "/b/$slug/dashboard", params: { slug: v } })}
+            onValueChange={(v) => navigate({ to: "/admin/b/$slug/dashboard", params: { slug: v } })}
           >
             <SelectTrigger className="h-9 text-xs">
               <SelectValue placeholder={lang === "ar" ? "اختر علامة" : "Select a brand"} />
@@ -111,10 +111,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </SelectContent>
           </Select>
           <Link
-            to="/brands"
+            to="/admin/brands"
             className={cn(
               "flex items-center gap-2 px-2 py-1.5 rounded-md text-xs transition-colors",
-              pathname === "/brands"
+              pathname === "/admin/brands"
                 ? "bg-sidebar-primary text-sidebar-primary-foreground"
                 : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
             )}
