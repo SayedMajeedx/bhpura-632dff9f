@@ -140,6 +140,8 @@ export type Database = {
           benefit_enabled: boolean
           benefit_qr_url: string | null
           brand_id: string
+          btn_checkout_bg: string | null
+          btn_checkout_fg: string | null
           btn_primary_bg: string | null
           btn_primary_fg: string | null
           btn_secondary_bg: string | null
@@ -185,6 +187,8 @@ export type Database = {
           benefit_enabled?: boolean
           benefit_qr_url?: string | null
           brand_id: string
+          btn_checkout_bg?: string | null
+          btn_checkout_fg?: string | null
           btn_primary_bg?: string | null
           btn_primary_fg?: string | null
           btn_secondary_bg?: string | null
@@ -230,6 +234,8 @@ export type Database = {
           benefit_enabled?: boolean
           benefit_qr_url?: string | null
           brand_id?: string
+          btn_checkout_bg?: string | null
+          btn_checkout_fg?: string | null
           btn_primary_bg?: string | null
           btn_primary_fg?: string | null
           btn_secondary_bg?: string | null

@@ -637,13 +637,15 @@ function StorefrontCustomizerCard({ brandId }: { brandId: string }) {
     btn_primary_fg: string | null;
     btn_secondary_bg: string | null;
     btn_secondary_fg: string | null;
+    btn_checkout_bg: string | null;
+    btn_checkout_fg: string | null;
   } | null>(null);
 
   const { data } = useQuery({
     queryKey: ["business-settings-theme", brandId],
     queryFn: async () => {
       const { data, error } = await supabase.from("business_settings")
-        .select("logo_size, logo_align, header_bg, header_fg, footer_bg, footer_fg, heading_color, link_color, btn_primary_bg, btn_primary_fg, btn_secondary_bg, btn_secondary_fg")
+        .select("logo_size, logo_align, header_bg, header_fg, footer_bg, footer_fg, heading_color, link_color, btn_primary_bg, btn_primary_fg, btn_secondary_bg, btn_secondary_fg, btn_checkout_bg, btn_checkout_fg")
         .eq("brand_id", brandId).maybeSingle();
       if (error) throw error;
       return data as any;
@@ -664,6 +666,8 @@ function StorefrontCustomizerCard({ brandId }: { brandId: string }) {
       btn_primary_fg: data.btn_primary_fg ?? null,
       btn_secondary_bg: data.btn_secondary_bg ?? null,
       btn_secondary_fg: data.btn_secondary_fg ?? null,
+      btn_checkout_bg: data.btn_checkout_bg ?? null,
+      btn_checkout_fg: data.btn_checkout_fg ?? null,
     });
   }, [data]);
 
@@ -759,6 +763,8 @@ function StorefrontCustomizerCard({ brandId }: { brandId: string }) {
           <ColorField label={isAr ? "نص الزر الأساسي" : "Primary button text"} value={state.btn_primary_fg} onChange={(v) => setState({ ...state, btn_primary_fg: v })} />
           <ColorField label={isAr ? "خلفية الزر الثانوي (اشتر الآن)" : "Secondary button bg (Buy now)"} value={state.btn_secondary_bg} onChange={(v) => setState({ ...state, btn_secondary_bg: v })} />
           <ColorField label={isAr ? "نص الزر الثانوي" : "Secondary button text"} value={state.btn_secondary_fg} onChange={(v) => setState({ ...state, btn_secondary_fg: v })} />
+          <ColorField label={isAr ? "خلفية زر إتمام الشراء" : "Checkout button bg"} value={state.btn_checkout_bg} onChange={(v) => setState({ ...state, btn_checkout_bg: v })} />
+          <ColorField label={isAr ? "نص زر إتمام الشراء" : "Checkout button text"} value={state.btn_checkout_fg} onChange={(v) => setState({ ...state, btn_checkout_fg: v })} />
         </div>
       </div>
 
