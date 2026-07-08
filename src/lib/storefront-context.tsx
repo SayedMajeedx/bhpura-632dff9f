@@ -47,6 +47,15 @@ export type PublicSettings = {
   btn_secondary_fg: string | null;
   btn_checkout_bg: string | null;
   btn_checkout_fg: string | null;
+  pages: Array<{
+    title_ar: string | null;
+    title_en: string | null;
+    content_ar: string | null;
+    content_en: string | null;
+    image_url: string | null;
+  }>;
+  whatsapp_enabled: boolean;
+  whatsapp_number: string | null;
 };
 
 export type CartItem = {
