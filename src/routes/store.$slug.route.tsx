@@ -7,6 +7,7 @@ import {
   formatPrice,
   type Brand,
   type PublicSettings,
+  readableOn,
 } from "@/lib/storefront-context";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
@@ -36,22 +37,35 @@ export const Route = createFileRoute("/store/$slug")({
       .eq("brand_id", brand.id)
       .maybeSingle();
 
+    const s = settings as any;
     const safeSettings: PublicSettings = {
       brand_id: brand.id,
-      business_name: settings?.business_name ?? brand.name_en,
-      logo_url: settings?.logo_url ?? brand.logo_url ?? null,
-      currency: settings?.currency ?? "BHD",
-      primary_color: settings?.primary_color ?? brand.primary_color ?? "#8b6f47",
-      text_color: settings?.text_color ?? "#111111",
-      background_color: settings?.background_color ?? "#ffffff",
-      cod_enabled: settings?.cod_enabled ?? true,
-      card_enabled: settings?.card_enabled ?? false,
-      benefit_enabled: settings?.benefit_enabled ?? false,
-      benefit_qr_url: settings?.benefit_qr_url ?? null,
-      footer_note: settings?.footer_note ?? null,
-      delivery_enabled: (settings as any)?.delivery_enabled ?? true,
-      pickup_enabled: (settings as any)?.pickup_enabled ?? true,
-      delivery_fee: Number((settings as any)?.delivery_fee ?? 0),
+      business_name: s?.business_name ?? brand.name_en,
+      logo_url: s?.logo_url ?? brand.logo_url ?? null,
+      currency: s?.currency ?? "BHD",
+      primary_color: s?.primary_color ?? brand.primary_color ?? "#8b6f47",
+      text_color: s?.text_color ?? "#111111",
+      background_color: s?.background_color ?? "#ffffff",
+      cod_enabled: s?.cod_enabled ?? true,
+      card_enabled: s?.card_enabled ?? false,
+      benefit_enabled: s?.benefit_enabled ?? false,
+      benefit_qr_url: s?.benefit_qr_url ?? null,
+      footer_note: s?.footer_note ?? null,
+      delivery_enabled: s?.delivery_enabled ?? true,
+      pickup_enabled: s?.pickup_enabled ?? true,
+      delivery_fee: Number(s?.delivery_fee ?? 0),
+      logo_size: Number(s?.logo_size ?? 48),
+      logo_align: (s?.logo_align ?? "left") as "left" | "center" | "right",
+      header_bg: s?.header_bg ?? null,
+      header_fg: s?.header_fg ?? null,
+      footer_bg: s?.footer_bg ?? null,
+      footer_fg: s?.footer_fg ?? null,
+      heading_color: s?.heading_color ?? null,
+      link_color: s?.link_color ?? null,
+      btn_primary_bg: s?.btn_primary_bg ?? null,
+      btn_primary_fg: s?.btn_primary_fg ?? null,
+      btn_secondary_bg: s?.btn_secondary_bg ?? null,
+      btn_secondary_fg: s?.btn_secondary_fg ?? null,
     };
 
 
@@ -124,6 +138,16 @@ function StoreShell() {
   }, [brand.id, brand.slug, qc]);
 
   const primary = settings.primary_color;
+  const headerBg = settings.header_bg ?? settings.background_color ?? "#ffffff";
+  const headerFg = settings.header_fg ?? readableOn(headerBg, settings.text_color);
+  const footerBg = settings.footer_bg ?? settings.background_color ?? "#ffffff";
+  const footerFg = settings.footer_fg ?? readableOn(footerBg, settings.text_color);
+  const btnPrimaryBg = settings.btn_primary_bg ?? primary;
+  const btnPrimaryFg = settings.btn_primary_fg ?? readableOn(btnPrimaryBg, "#ffffff");
+  const btnSecondaryBg = settings.btn_secondary_bg ?? "#111111";
+  const btnSecondaryFg = settings.btn_secondary_fg ?? readableOn(btnSecondaryBg, "#ffffff");
+  const headingColor = settings.heading_color ?? primary;
+  const linkColor = settings.link_color ?? primary;
 
   return (
     <div
@@ -133,6 +157,16 @@ function StoreShell() {
           backgroundColor: settings.background_color,
           color: settings.text_color,
           ["--brand" as any]: primary,
+          ["--sf-header-bg" as any]: headerBg,
+          ["--sf-header-fg" as any]: headerFg,
+          ["--sf-footer-bg" as any]: footerBg,
+          ["--sf-footer-fg" as any]: footerFg,
+          ["--sf-btn-primary-bg" as any]: btnPrimaryBg,
+          ["--sf-btn-primary-fg" as any]: btnPrimaryFg,
+          ["--sf-btn-secondary-bg" as any]: btnSecondaryBg,
+          ["--sf-btn-secondary-fg" as any]: btnSecondaryFg,
+          ["--sf-heading" as any]: headingColor,
+          ["--sf-link" as any]: linkColor,
         } as React.CSSProperties
       }
     >
@@ -148,35 +182,54 @@ function StoreShell() {
 function StoreHeader() {
   const { brand, settings, lang, setLang, t, cartCount, session, signOut } = useStorefront();
   const displayName = lang === "ar" ? brand.name_ar || brand.name_en : brand.name_en;
+  const align = settings.logo_align ?? "left";
+  const logoSize = settings.logo_size || 40;
 
   return (
     <header
-      className="sticky top-0 z-40 w-full border-b backdrop-blur bg-white/80"
-      style={{ borderColor: "rgba(0,0,0,0.06)" }}
+      className="sticky top-0 z-40 w-full border-b backdrop-blur"
+      style={{
+        backgroundColor: "var(--sf-header-bg)",
+        color: "var(--sf-header-fg)",
+        borderColor: "rgba(0,0,0,0.08)",
+      }}
     >
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+      <div
+        className={`mx-auto max-w-7xl px-4 sm:px-6 h-16 flex items-center gap-3 ${
+          align === "center" ? "justify-between" : "justify-between"
+        }`}
+      >
         <Link
           to="/store/$slug"
           params={{ slug: brand.slug }}
-          className="flex items-center gap-3 min-w-0"
+          className={`flex items-center gap-3 min-w-0 ${align === "center" ? "mx-auto" : ""}`}
+          style={{ color: "var(--sf-header-fg)" }}
         >
           {settings.logo_url && (
             <img
               src={settings.logo_url}
               alt={displayName}
-              className="h-10 w-10 rounded-full object-cover shrink-0"
+              className="rounded-full object-cover shrink-0"
+              style={{ height: logoSize, width: logoSize }}
             />
           )}
-          <span className="font-display text-lg sm:text-xl truncate" style={{ color: settings.primary_color }}>
+          <span
+            className="font-display text-lg sm:text-xl truncate"
+            style={{ color: "var(--sf-heading)" }}
+          >
             {displayName}
           </span>
         </Link>
 
-        <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+        <div
+          className="flex items-center gap-1 sm:gap-2 shrink-0"
+          style={{ color: "var(--sf-header-fg)" }}
+        >
           <Button
             variant="ghost"
             size="sm"
-            className="gap-1"
+            className="gap-1 hover:bg-black/5"
+            style={{ color: "var(--sf-header-fg)" }}
             onClick={() => setLang(lang === "ar" ? "en" : "ar")}
             aria-label="Language switch"
           >
@@ -185,12 +238,12 @@ function StoreHeader() {
           </Button>
 
           {session ? (
-            <Button variant="ghost" size="sm" className="gap-1" onClick={() => signOut()} title={session.user?.email ?? ""}>
+            <Button variant="ghost" size="sm" className="gap-1 hover:bg-black/5" style={{ color: "var(--sf-header-fg)" }} onClick={() => signOut()} title={session.user?.email ?? ""}>
               <LogOut className="h-4 w-4" />
               <span className="hidden sm:inline max-w-[120px] truncate">{session.user?.email ?? t("خروج", "Sign out")}</span>
             </Button>
           ) : (
-            <Button asChild variant="ghost" size="sm" className="gap-1">
+            <Button asChild variant="ghost" size="sm" className="gap-1 hover:bg-black/5" style={{ color: "var(--sf-header-fg)" }}>
               <Link to="/store/$slug/auth" params={{ slug: brand.slug }}>
                 <User className="h-4 w-4" />
                 <span className="hidden sm:inline">{t("دخول", "Sign in")}</span>
@@ -199,13 +252,13 @@ function StoreHeader() {
           )}
 
           <CartDrawer>
-            <Button variant="ghost" size="sm" className="relative gap-1">
+            <Button variant="ghost" size="sm" className="relative gap-1 hover:bg-black/5" style={{ color: "var(--sf-header-fg)" }}>
               <ShoppingBag className="h-5 w-5" />
               <span className="hidden sm:inline">{t("السلة", "Cart")}</span>
               {cartCount > 0 && (
                 <span
-                  className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-semibold grid place-items-center text-white"
-                  style={{ backgroundColor: settings.primary_color }}
+                  className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-semibold grid place-items-center"
+                  style={{ backgroundColor: "var(--sf-btn-primary-bg)", color: "var(--sf-btn-primary-fg)" }}
                 >
                   {cartCount}
                 </span>
@@ -295,7 +348,7 @@ function CartDrawer({ children }: { children: React.ReactNode }) {
             </div>
             <Button
               className="w-full h-12"
-              style={{ backgroundColor: settings.primary_color, color: "#fff" }}
+              style={{ backgroundColor: "var(--sf-btn-primary-bg)", color: "var(--sf-btn-primary-fg)" }}
               onClick={() => {
                 setOpen(false);
                 navigate({ to: "/store/$slug/checkout", params: { slug: brand.slug } });
@@ -313,9 +366,16 @@ function CartDrawer({ children }: { children: React.ReactNode }) {
 function StoreFooter() {
   const { settings, t, brand, lang } = useStorefront();
   return (
-    <footer className="border-t mt-16 py-8" style={{ borderColor: "rgba(0,0,0,0.06)" }}>
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 text-center text-sm text-muted-foreground space-y-1">
-        <div className="font-medium" style={{ color: settings.primary_color }}>
+    <footer
+      className="border-t mt-16 py-8"
+      style={{
+        borderColor: "rgba(0,0,0,0.08)",
+        backgroundColor: "var(--sf-footer-bg)",
+        color: "var(--sf-footer-fg)",
+      }}
+    >
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 text-center text-sm space-y-1" style={{ color: "var(--sf-footer-fg)" }}>
+        <div className="font-medium" style={{ color: "var(--sf-heading)" }}>
           {lang === "ar" ? brand.name_ar || brand.name_en : brand.name_en}
         </div>
         {settings.footer_note && <div>{settings.footer_note}</div>}
