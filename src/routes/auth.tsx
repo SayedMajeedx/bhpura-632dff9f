@@ -11,6 +11,7 @@ import { useI18n } from "@/lib/i18n";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Languages } from "lucide-react";
 import { applyRememberMe } from "@/lib/session-persistence";
+import { translateAuthError } from "@/lib/auth-errors";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
@@ -31,12 +32,24 @@ function AuthPage() {
     setLoading(true);
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email, password,
           options: { emailRedirectTo: window.location.origin },
         });
         if (error) throw error;
         applyRememberMe(remember);
+        if (!data.session) {
+          // Email confirmation required — inform the user immediately.
+          toast.success(
+            lang === "ar"
+              ? "تحقّق من بريدك الإلكتروني وافتح رابط التفعيل لتأكيد حسابك قبل تسجيل الدخول."
+              : "Check your email and click the verification link to activate your account before signing in.",
+            { duration: 9000 },
+          );
+          setMode("signin");
+          setPassword("");
+          return;
+        }
         toast.success(t("auth.accountCreated"));
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -47,16 +60,7 @@ function AuthPage() {
       await new Promise((r) => setTimeout(r, 100));
       navigate({ to: "/dashboard" });
     } catch (err: any) {
-      // Provide clear error messages
-      let message = err.message ?? t("auth.failed");
-      if (err.message?.includes("Invalid login credentials")) {
-        message = t("auth.failed");
-      } else if (err.message?.includes("network") || err.message?.includes("fetch")) {
-        message = t("auth.networkError");
-      } else if (err.message?.includes("session")) {
-        message = t("auth.sessionError");
-      }
-      toast.error(message);
+      toast.error(translateAuthError(err, lang as any));
     } finally {
       setLoading(false);
     }
