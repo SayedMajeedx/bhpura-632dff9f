@@ -226,7 +226,7 @@ function WhatsAppFab() {
 }
 
 function StoreHeader() {
-  const { brand, settings, lang, setLang, t, cartCount, session, signOut } = useStorefront();
+  const { brand, settings, lang, setLang, t, cartCount, session } = useStorefront();
   const displayName = lang === "ar" ? brand.name_ar || brand.name_en : brand.name_en;
   const align = settings.logo_align ?? "left";
   const logoSize = settings.logo_size || 40;
