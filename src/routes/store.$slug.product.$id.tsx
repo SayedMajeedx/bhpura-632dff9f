@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useStorefront, formatPrice, type CartItem } from "@/lib/storefront-context";
+import { useStorefront, formatPrice, pickName, pickDescription } from "@/lib/storefront-context";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -25,7 +25,11 @@ type Variant = {
 type Product = {
   id: string;
   name: string;
+  name_ar: string | null;
+  name_en: string | null;
   description: string | null;
+  description_ar: string | null;
+  description_en: string | null;
   image_url: string | null;
   media: unknown;
   product_variants: Variant[];
@@ -44,7 +48,7 @@ function ProductDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("products")
-        .select("id, name, description, image_url, media, product_variants(id, size, color, fabric, selling_price, stock_main)")
+        .select("id, name, name_ar, name_en, description, description_ar, description_en, image_url, media, product_variants(id, size, color, fabric, selling_price, stock_main)")
         .eq("id", id)
         .eq("brand_id", brand.id)
         .eq("is_active", true)
