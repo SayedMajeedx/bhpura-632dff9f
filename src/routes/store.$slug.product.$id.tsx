@@ -228,7 +228,7 @@ function ProductDetail() {
                 +
               </button>
             </div>
-            <span className="ms-3 text-xs text-muted-foreground">
+            <span className="ms-3 inline-flex items-center rounded-full border px-2 py-0.5 text-xs bg-white/95 text-neutral-900">
               {maxStock} {t("متوفر", "available")}
             </span>
           </div>
@@ -237,7 +237,7 @@ function ProductDetail() {
         <div className="flex gap-2">
           <Button
             className="flex-1 h-12"
-            style={{ backgroundColor: settings.primary_color, color: "#fff" }}
+            style={{ backgroundColor: "var(--sf-btn-primary-bg)", color: "var(--sf-btn-primary-fg)" }}
             disabled={!canAdd}
             onClick={doAdd}
           >
@@ -245,8 +245,12 @@ function ProductDetail() {
             {t("أضف للسلة", "Add to cart")}
           </Button>
           <Button
-            variant="outline"
-            className="h-12"
+            className="h-12 border"
+            style={{
+              backgroundColor: "var(--sf-btn-secondary-bg)",
+              color: "var(--sf-btn-secondary-fg)",
+              borderColor: "var(--sf-btn-secondary-bg)",
+            }}
             disabled={!canAdd}
             onClick={() => {
               doAdd();
