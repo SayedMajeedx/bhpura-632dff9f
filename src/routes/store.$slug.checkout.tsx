@@ -360,7 +360,10 @@ function Checkout() {
           </div>
           <Button
             className="w-full h-12"
-            style={{ backgroundColor: settings.primary_color, color: "#fff" }}
+            style={{
+              backgroundColor: settings.btn_checkout_bg ?? settings.primary_color,
+              color: settings.btn_checkout_fg ?? "#fff",
+            }}
             disabled={submitting || availableMethods.length === 0 || fulfillmentOptions.length === 0}
             onClick={submit}
           >
