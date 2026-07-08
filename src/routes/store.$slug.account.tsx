@@ -143,7 +143,7 @@ function useCustomer() {
     queryFn: async (): Promise<Customer | null> => {
       const { data, error } = await supabase
         .from("customers")
-        .select("id, brand_id, name, phone, email")
+        .select("id, brand_id, user_id, name, phone, email")
         .eq("brand_id", brand.id)
         .eq("auth_user_id", session!.user!.id)
         .maybeSingle();
