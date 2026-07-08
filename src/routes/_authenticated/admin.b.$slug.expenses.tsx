@@ -34,7 +34,7 @@ export const Route = createFileRoute("/_authenticated/admin/b/$slug/expenses")({
       ((role === "admin" || role === "super_admin" || role === "brand_admin") && status === "active");
 
     if (!allowed) {
-      throw redirect({ to: "/b/$slug/dashboard", params: { slug: params.slug } });
+      throw redirect({ to: "/admin/b/$slug/dashboard", params: { slug: params.slug } });
     }
   },
   component: ExpensesPage,

@@ -25,7 +25,7 @@ export const Route = createFileRoute("/_authenticated/admin/brands")({
       .eq("id", user.id)
       .maybeSingle();
     const isSuperAdmin = email === SUPER_ADMIN_EMAIL || profile?.role === "super_admin";
-    if (!isSuperAdmin) throw redirect({ to: "/dashboard" });
+    if (!isSuperAdmin) throw redirect({ to: "/admin" });
   },
   component: BrandsPage,
 });
@@ -123,7 +123,7 @@ function BrandsPage() {
               </div>
               <div className="flex flex-wrap gap-2">
                 <Button asChild variant="secondary" size="sm">
-                  <Link to="/b/$slug/dashboard" params={{ slug: b.slug }}>
+                  <Link to="/admin/b/$slug/dashboard" params={{ slug: b.slug }}>
                     {lang === "ar" ? "فتح لوحة التحكم" : "Open workspace"}
                   </Link>
                 </Button>

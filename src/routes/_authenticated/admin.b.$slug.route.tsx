@@ -17,7 +17,7 @@ export const Route = createFileRoute("/_authenticated/admin/b/$slug")({
       .maybeSingle();
 
     if (brandErr || !brand) {
-      throw redirect({ to: "/dashboard" });
+      throw redirect({ to: "/admin" });
     }
 
     // Load caller profile (may be null for legacy users; treat email match as super admin)
@@ -42,11 +42,11 @@ export const Route = createFileRoute("/_authenticated/admin/b/$slug")({
     if (!isSuperAdmin && !belongsToBrand) {
       // Non-super-admin trying to access a brand they don't belong to.
       // Send them to their own workspace, or to the dashboard redirector.
-      throw redirect({ to: "/dashboard" });
+      throw redirect({ to: "/admin" });
     }
 
     if (!brand.is_active && !isSuperAdmin) {
-      throw redirect({ to: "/dashboard" });
+      throw redirect({ to: "/admin" });
     }
 
     return { brand: brand as Brand };

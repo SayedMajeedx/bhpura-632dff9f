@@ -57,7 +57,7 @@ export const Route = createFileRoute("/_authenticated/admin/b/$slug/team")({
       (profile.email || "").toLowerCase() === SUPER_ADMIN_EMAIL;
 
     if (!allowed) {
-      throw redirect({ to: "/b/$slug/dashboard", params: { slug: params.slug } });
+      throw redirect({ to: "/admin/b/$slug/dashboard", params: { slug: params.slug } });
     }
     if (profile && profile.status !== "active") {
       await supabase.auth.signOut();

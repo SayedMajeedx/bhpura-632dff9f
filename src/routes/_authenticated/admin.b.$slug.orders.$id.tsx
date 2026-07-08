@@ -68,7 +68,7 @@ function OrderErrorBoundary({ error }: { error?: Error }) {
         <p className="text-muted-foreground">
           {error?.message || "This order could not be loaded. It may have been deleted."}
         </p>
-        <Link to="/b/$slug/orders" params={{ slug }} className="text-primary underline">
+        <Link to="/admin/b/$slug/orders" params={{ slug }} className="text-primary underline">
           ← Back to orders
         </Link>
       </Card>
@@ -543,7 +543,7 @@ function OrderDetail() {
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto">
       <div className="no-print mb-6 flex flex-wrap items-center justify-between gap-3">
-        <Link to="/b/$slug/orders" params={{ slug }} className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-2">
+        <Link to="/admin/b/$slug/orders" params={{ slug }} className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-2">
           <ArrowLeft className="h-4 w-4" /> {t("orderDetail.back")}
         </Link>
         <div className="flex flex-wrap gap-2">
