@@ -32,6 +32,7 @@ import { Route as StoreSlugAuthRouteImport } from './routes/store.$slug.auth'
 import { Route as AuthenticatedBSlugRouteRouteImport } from './routes/_authenticated/b.$slug.route'
 import { Route as StoreSlugThankYouOrderIdRouteImport } from './routes/store.$slug.thank-you.$orderId'
 import { Route as StoreSlugProductIdRouteImport } from './routes/store.$slug.product.$id'
+import { Route as StoreSlugPageIdxRouteImport } from './routes/store.$slug.page.$idx'
 import { Route as AuthenticatedBSlugTeamRouteImport } from './routes/_authenticated/b.$slug.team'
 import { Route as AuthenticatedBSlugSettingsRouteImport } from './routes/_authenticated/b.$slug.settings'
 import { Route as AuthenticatedBSlugInventoryRouteImport } from './routes/_authenticated/b.$slug.inventory'
@@ -159,6 +160,11 @@ const StoreSlugProductIdRoute = StoreSlugProductIdRouteImport.update({
   path: '/product/$id',
   getParentRoute: () => StoreSlugRouteRoute,
 } as any)
+const StoreSlugPageIdxRoute = StoreSlugPageIdxRouteImport.update({
+  id: '/page/$idx',
+  path: '/page/$idx',
+  getParentRoute: () => StoreSlugRouteRoute,
+} as any)
 const AuthenticatedBSlugTeamRoute = AuthenticatedBSlugTeamRouteImport.update({
   id: '/team',
   path: '/team',
@@ -255,6 +261,7 @@ export interface FileRoutesByFullPath {
   '/b/$slug/inventory': typeof AuthenticatedBSlugInventoryRoute
   '/b/$slug/settings': typeof AuthenticatedBSlugSettingsRoute
   '/b/$slug/team': typeof AuthenticatedBSlugTeamRoute
+  '/store/$slug/page/$idx': typeof StoreSlugPageIdxRoute
   '/store/$slug/product/$id': typeof StoreSlugProductIdRoute
   '/store/$slug/thank-you/$orderId': typeof StoreSlugThankYouOrderIdRoute
   '/b/$slug/orders/$id': typeof AuthenticatedBSlugOrdersIdRoute
@@ -289,6 +296,7 @@ export interface FileRoutesByTo {
   '/b/$slug/inventory': typeof AuthenticatedBSlugInventoryRoute
   '/b/$slug/settings': typeof AuthenticatedBSlugSettingsRoute
   '/b/$slug/team': typeof AuthenticatedBSlugTeamRoute
+  '/store/$slug/page/$idx': typeof StoreSlugPageIdxRoute
   '/store/$slug/product/$id': typeof StoreSlugProductIdRoute
   '/store/$slug/thank-you/$orderId': typeof StoreSlugThankYouOrderIdRoute
   '/b/$slug/orders/$id': typeof AuthenticatedBSlugOrdersIdRoute
@@ -326,6 +334,7 @@ export interface FileRoutesById {
   '/_authenticated/b/$slug/inventory': typeof AuthenticatedBSlugInventoryRoute
   '/_authenticated/b/$slug/settings': typeof AuthenticatedBSlugSettingsRoute
   '/_authenticated/b/$slug/team': typeof AuthenticatedBSlugTeamRoute
+  '/store/$slug/page/$idx': typeof StoreSlugPageIdxRoute
   '/store/$slug/product/$id': typeof StoreSlugProductIdRoute
   '/store/$slug/thank-you/$orderId': typeof StoreSlugThankYouOrderIdRoute
   '/_authenticated/b/$slug/orders/$id': typeof AuthenticatedBSlugOrdersIdRoute
@@ -363,6 +372,7 @@ export interface FileRouteTypes {
     | '/b/$slug/inventory'
     | '/b/$slug/settings'
     | '/b/$slug/team'
+    | '/store/$slug/page/$idx'
     | '/store/$slug/product/$id'
     | '/store/$slug/thank-you/$orderId'
     | '/b/$slug/orders/$id'
@@ -397,6 +407,7 @@ export interface FileRouteTypes {
     | '/b/$slug/inventory'
     | '/b/$slug/settings'
     | '/b/$slug/team'
+    | '/store/$slug/page/$idx'
     | '/store/$slug/product/$id'
     | '/store/$slug/thank-you/$orderId'
     | '/b/$slug/orders/$id'
@@ -433,6 +444,7 @@ export interface FileRouteTypes {
     | '/_authenticated/b/$slug/inventory'
     | '/_authenticated/b/$slug/settings'
     | '/_authenticated/b/$slug/team'
+    | '/store/$slug/page/$idx'
     | '/store/$slug/product/$id'
     | '/store/$slug/thank-you/$orderId'
     | '/_authenticated/b/$slug/orders/$id'
@@ -612,6 +624,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StoreSlugProductIdRouteImport
       parentRoute: typeof StoreSlugRouteRoute
     }
+    '/store/$slug/page/$idx': {
+      id: '/store/$slug/page/$idx'
+      path: '/page/$idx'
+      fullPath: '/store/$slug/page/$idx'
+      preLoaderRoute: typeof StoreSlugPageIdxRouteImport
+      parentRoute: typeof StoreSlugRouteRoute
+    }
     '/_authenticated/b/$slug/team': {
       id: '/_authenticated/b/$slug/team'
       path: '/team'
@@ -760,6 +779,7 @@ interface StoreSlugRouteRouteChildren {
   StoreSlugCheckoutRoute: typeof StoreSlugCheckoutRoute
   StoreSlugSearchRoute: typeof StoreSlugSearchRoute
   StoreSlugIndexRoute: typeof StoreSlugIndexRoute
+  StoreSlugPageIdxRoute: typeof StoreSlugPageIdxRoute
   StoreSlugProductIdRoute: typeof StoreSlugProductIdRoute
   StoreSlugThankYouOrderIdRoute: typeof StoreSlugThankYouOrderIdRoute
 }
@@ -769,6 +789,7 @@ const StoreSlugRouteRouteChildren: StoreSlugRouteRouteChildren = {
   StoreSlugCheckoutRoute: StoreSlugCheckoutRoute,
   StoreSlugSearchRoute: StoreSlugSearchRoute,
   StoreSlugIndexRoute: StoreSlugIndexRoute,
+  StoreSlugPageIdxRoute: StoreSlugPageIdxRoute,
   StoreSlugProductIdRoute: StoreSlugProductIdRoute,
   StoreSlugThankYouOrderIdRoute: StoreSlugThankYouOrderIdRoute,
 }
