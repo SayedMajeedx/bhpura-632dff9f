@@ -366,9 +366,16 @@ function CartDrawer({ children }: { children: React.ReactNode }) {
 function StoreFooter() {
   const { settings, t, brand, lang } = useStorefront();
   return (
-    <footer className="border-t mt-16 py-8" style={{ borderColor: "rgba(0,0,0,0.06)" }}>
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 text-center text-sm text-muted-foreground space-y-1">
-        <div className="font-medium" style={{ color: settings.primary_color }}>
+    <footer
+      className="border-t mt-16 py-8"
+      style={{
+        borderColor: "rgba(0,0,0,0.08)",
+        backgroundColor: "var(--sf-footer-bg)",
+        color: "var(--sf-footer-fg)",
+      }}
+    >
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 text-center text-sm space-y-1" style={{ color: "var(--sf-footer-fg)" }}>
+        <div className="font-medium" style={{ color: "var(--sf-heading)" }}>
           {lang === "ar" ? brand.name_ar || brand.name_en : brand.name_en}
         </div>
         {settings.footer_note && <div>{settings.footer_note}</div>}
