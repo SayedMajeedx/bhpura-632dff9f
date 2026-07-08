@@ -1,5 +1,5 @@
 import { Link, useRouterState, useNavigate, useParams } from "@tanstack/react-router";
-import { LayoutDashboard, Package, Users, ReceiptText, Settings, LogOut, Languages, Menu, Wallet, Megaphone, Shield, Store, Crown, Plug, Tags } from "lucide-react";
+import { LayoutDashboard, Package, Users, ReceiptText, Settings, LogOut, Languages, Menu, Wallet, Megaphone, Shield, Store, Crown, Plug, Tags, FileText } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -68,6 +68,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         items.push({ to: "/b/$slug/team", params: { slug: activeSlug }, label: lang === "ar" ? "إدارة الموظفين" : "Team Management", icon: Shield });
         items.push({ to: "/b/$slug/integrations", params: { slug: activeSlug }, label: t("nav.integrations"), icon: Plug });
       }
+      items.push({ to: "/b/$slug/pages", params: { slug: activeSlug }, label: lang === "ar" ? "الصفحات والسياسات" : "Pages & Policies", icon: FileText });
       items.push({ to: "/b/$slug/settings", params: { slug: activeSlug }, label: t("nav.settings"), icon: Settings });
 
     }

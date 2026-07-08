@@ -173,6 +173,7 @@ export type Database = {
           logo_x: number
           logo_y: number
           next_invoice_number: number
+          pages: Json
           phone: string | null
           pickup_enabled: boolean
           primary_color: string
@@ -180,6 +181,8 @@ export type Database = {
           updated_at: string
           user_id: string
           vat_number: string | null
+          whatsapp_enabled: boolean
+          whatsapp_number: string | null
         }
         Insert: {
           address?: string | null
@@ -220,6 +223,7 @@ export type Database = {
           logo_x?: number
           logo_y?: number
           next_invoice_number?: number
+          pages?: Json
           phone?: string | null
           pickup_enabled?: boolean
           primary_color?: string
@@ -227,6 +231,8 @@ export type Database = {
           updated_at?: string
           user_id: string
           vat_number?: string | null
+          whatsapp_enabled?: boolean
+          whatsapp_number?: string | null
         }
         Update: {
           address?: string | null
@@ -267,6 +273,7 @@ export type Database = {
           logo_x?: number
           logo_y?: number
           next_invoice_number?: number
+          pages?: Json
           phone?: string | null
           pickup_enabled?: boolean
           primary_color?: string
@@ -274,6 +281,8 @@ export type Database = {
           updated_at?: string
           user_id?: string
           vat_number?: string | null
+          whatsapp_enabled?: boolean
+          whatsapp_number?: string | null
         }
         Relationships: [
           {
@@ -1005,6 +1014,8 @@ export type Database = {
           benefit_enabled: boolean | null
           benefit_qr_url: string | null
           brand_id: string | null
+          btn_checkout_bg: string | null
+          btn_checkout_fg: string | null
           btn_primary_bg: string | null
           btn_primary_fg: string | null
           btn_secondary_bg: string | null
@@ -1027,9 +1038,12 @@ export type Database = {
           logo_align: string | null
           logo_size: number | null
           logo_url: string | null
+          pages: Json | null
           pickup_enabled: boolean | null
           primary_color: string | null
           text_color: string | null
+          whatsapp_enabled: boolean | null
+          whatsapp_number: string | null
         }
         Relationships: [
           {
