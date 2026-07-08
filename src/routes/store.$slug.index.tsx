@@ -54,6 +54,9 @@ function StoreHome() {
       if (error) throw error;
       return (data ?? []) as unknown as ProductRow[];
     },
+    staleTime: 30_000,
+    refetchOnWindowFocus: true,
+    refetchOnMount: "always",
   });
 
   const { data: categories } = useQuery({
@@ -67,6 +70,7 @@ function StoreHome() {
       if (error) throw error;
       return (data ?? []) as CategoryRow[];
     },
+    staleTime: 60_000,
   });
 
   const filtered = useMemo(() => {
