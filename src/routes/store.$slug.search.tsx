@@ -29,33 +29,15 @@ function SearchPage() {
     queryKey: ["storefront", brand.slug, "search", term],
     enabled: term.length > 0,
     queryFn: async () => {
-      const pattern = `%${term.replace(/[%_]/g, (m) => `\\${m}`)}%`;
-      // Try Arabic name/description columns if they exist; fall back gracefully.
-      const orFilter = [
-        `name.ilike.${pattern}`,
-        `description.ilike.${pattern}`,
-        `name_ar.ilike.${pattern}`,
-        `description_ar.ilike.${pattern}`,
-      ].join(",");
+      const pattern = `%${term.replace(/[%_]/g, (m: string) => `\\${m}`)}%`;
       const { data, error } = await supabase
         .from("products")
         .select("id, name, description, image_url, product_variants(id, selling_price, stock_main)")
         .eq("brand_id", brand.id)
         .eq("is_active", true)
-        .or(orFilter)
+        .or(`name.ilike.${pattern},description.ilike.${pattern}`)
         .limit(60);
-      if (error) {
-        // Retry without Arabic columns if they aren't present in this schema.
-        const { data: d2, error: e2 } = await supabase
-          .from("products")
-          .select("id, name, description, image_url, product_variants(id, selling_price, stock_main)")
-          .eq("brand_id", brand.id)
-          .eq("is_active", true)
-          .or(`name.ilike.${pattern},description.ilike.${pattern}`)
-          .limit(60);
-        if (e2) throw e2;
-        return (d2 ?? []) as unknown as ProductRow[];
-      }
+      if (error) throw error;
       return (data ?? []) as unknown as ProductRow[];
     },
     staleTime: 15_000,
