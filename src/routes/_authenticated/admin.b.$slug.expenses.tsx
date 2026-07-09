@@ -265,7 +265,15 @@ function ExpenseDialog({ expense, initial, onSaved }: { expense: Expense | null;
   return (
     <DialogContent>
       <DialogHeader>
-        <DialogTitle>{expense ? t("expenses.edit") : t("expenses.add")}</DialogTitle>
+        <DialogTitle className="flex items-center gap-2">
+          {expense ? t("expenses.edit") : t("expenses.add")}
+          {initial && (
+            <Badge variant="secondary" className="gap-1">
+              <Sparkles className="h-3 w-3" />
+              {lang === "ar" ? "استخرجت بالذكاء الاصطناعي — راجعها" : "AI extracted — review"}
+            </Badge>
+          )}
+        </DialogTitle>
       </DialogHeader>
       <div className="space-y-3">
         <div>
