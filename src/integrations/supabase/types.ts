@@ -103,6 +103,65 @@ export type Database = {
         }
         Relationships: []
       }
+      branches: {
+        Row: {
+          address_ar: string | null
+          address_en: string | null
+          brand_id: string
+          created_at: string
+          id: string
+          is_active: boolean
+          name_ar: string | null
+          name_en: string | null
+          notes_ar: string | null
+          notes_en: string | null
+          phone: string | null
+          sort_order: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address_ar?: string | null
+          address_en?: string | null
+          brand_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name_ar?: string | null
+          name_en?: string | null
+          notes_ar?: string | null
+          notes_en?: string | null
+          phone?: string | null
+          sort_order?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address_ar?: string | null
+          address_en?: string | null
+          brand_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name_ar?: string | null
+          name_en?: string | null
+          notes_ar?: string | null
+          notes_en?: string | null
+          phone?: string | null
+          sort_order?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "branches_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       brands: {
         Row: {
           about_ar: string | null
@@ -173,6 +232,11 @@ export type Database = {
           delivery_enabled: boolean
           delivery_fee: number
           email: string | null
+          email_footer_ar: string | null
+          email_footer_en: string | null
+          email_intro_ar: string | null
+          email_intro_en: string | null
+          email_sender_name: string | null
           font_family: string
           font_size: number
           font_url: string | null
@@ -224,6 +288,11 @@ export type Database = {
           delivery_enabled?: boolean
           delivery_fee?: number
           email?: string | null
+          email_footer_ar?: string | null
+          email_footer_en?: string | null
+          email_intro_ar?: string | null
+          email_intro_en?: string | null
+          email_sender_name?: string | null
           font_family?: string
           font_size?: number
           font_url?: string | null
@@ -275,6 +344,11 @@ export type Database = {
           delivery_enabled?: boolean
           delivery_fee?: number
           email?: string | null
+          email_footer_ar?: string | null
+          email_footer_en?: string | null
+          email_intro_ar?: string | null
+          email_intro_en?: string | null
+          email_sender_name?: string | null
           font_family?: string
           font_size?: number
           font_url?: string | null
@@ -694,6 +768,7 @@ export type Database = {
         Row: {
           brand_id: string
           created_at: string
+          custom_field_values: Json
           customization_total: number
           customizations: Json
           description: string
@@ -703,6 +778,7 @@ export type Database = {
           order_id: string
           product_id: string | null
           quantity: number
+          selected_variant: Json | null
           unit_price: number
           user_id: string
           variant_id: string | null
@@ -710,6 +786,7 @@ export type Database = {
         Insert: {
           brand_id: string
           created_at?: string
+          custom_field_values?: Json
           customization_total?: number
           customizations?: Json
           description: string
@@ -719,6 +796,7 @@ export type Database = {
           order_id: string
           product_id?: string | null
           quantity?: number
+          selected_variant?: Json | null
           unit_price?: number
           user_id: string
           variant_id?: string | null
@@ -726,6 +804,7 @@ export type Database = {
         Update: {
           brand_id?: string
           created_at?: string
+          custom_field_values?: Json
           customization_total?: number
           customizations?: Json
           description?: string
@@ -735,6 +814,7 @@ export type Database = {
           order_id?: string
           product_id?: string | null
           quantity?: number
+          selected_variant?: Json | null
           unit_price?: number
           user_id?: string
           variant_id?: string | null
@@ -773,6 +853,7 @@ export type Database = {
       orders: {
         Row: {
           advance_paid: number
+          branch_id: string | null
           brand_id: string
           channel: string
           confirmation_email_error: string | null
@@ -803,6 +884,7 @@ export type Database = {
         }
         Insert: {
           advance_paid?: number
+          branch_id?: string | null
           brand_id: string
           channel?: string
           confirmation_email_error?: string | null
@@ -833,6 +915,7 @@ export type Database = {
         }
         Update: {
           advance_paid?: number
+          branch_id?: string | null
           brand_id?: string
           channel?: string
           confirmation_email_error?: string | null
@@ -862,6 +945,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "orders_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "orders_brand_id_fkey"
             columns: ["brand_id"]
@@ -963,6 +1053,7 @@ export type Database = {
           brand_id: string
           category: string | null
           created_at: string
+          custom_fields: Json
           description: string | null
           description_ar: string | null
           description_en: string | null
@@ -981,6 +1072,7 @@ export type Database = {
           brand_id: string
           category?: string | null
           created_at?: string
+          custom_fields?: Json
           description?: string | null
           description_ar?: string | null
           description_en?: string | null
@@ -999,6 +1091,7 @@ export type Database = {
           brand_id?: string
           category?: string | null
           created_at?: string
+          custom_fields?: Json
           description?: string | null
           description_ar?: string | null
           description_en?: string | null
@@ -1143,6 +1236,7 @@ export type Database = {
           }
         | {
             Args: {
+              p_branch_id?: string
               p_brand_slug: string
               p_customer: Json
               p_fulfillment?: string
