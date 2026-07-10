@@ -256,6 +256,42 @@ function ProductDetail() {
           </div>
         )}
 
+        {customFields.length > 0 && (
+          <div className="mb-4 space-y-3">
+            {customFields.map((f) => {
+              const label = cfLabel(f);
+              const val = cfValues[f.key] ?? "";
+              const set = (v: string) => setCfValues((s) => ({ ...s, [f.key]: v }));
+              return (
+                <div key={f.key}>
+                  <label className="block text-sm font-medium mb-1">
+                    {label}{f.required && <span className="text-destructive ms-1">*</span>}
+                  </label>
+                  {f.type === "select" ? (
+                    <select
+                      value={val}
+                      onChange={(e) => set(e.target.value)}
+                      className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+                    >
+                      <option value="">{t("اختر...", "Select...")}</option>
+                      {(f.options ?? []).map((o) => (
+                        <option key={o} value={o}>{o}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type={f.type === "number" ? "number" : "text"}
+                      value={val}
+                      onChange={(e) => set(e.target.value)}
+                      className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+                    />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
         {variant && (
           <div className="mb-4">
             <div className="text-sm font-medium mb-2">{t("الكمية", "Quantity")}</div>
