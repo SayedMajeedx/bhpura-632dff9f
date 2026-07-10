@@ -34,17 +34,18 @@ export const scanReceipt = createServerFn({ method: "POST" })
       {
         type: "text",
         text:
-          `You are an expert bookkeeping assistant. Extract the expense from this receipt/invoice image and return STRICT JSON ONLY.\n` +
-          `All text values MUST be written in ${langName}. If the source is in another language, translate values (supplier/category/description) into ${langName} while keeping proper nouns readable.\n` +
-          `Schema: {"category": string, "description": string, "supplier": string, "amount": number, "currency": string (ISO 4217, e.g. BHD, USD, SAR), "expense_date": "YYYY-MM-DD", "notes": string}.\n` +
-          `Rules:\n` +
-          `- category: pick the best short label (e.g. Shipping, Packaging, Marketing, Utilities, Software, Meals, Travel, Office, Inventory, Other) translated to ${langName}.\n` +
-          `- amount: the grand total (number only, no currency symbol). Use 0 if unreadable.\n` +
-          `- currency: 3-letter ISO code; if unclear default "BHD".\n` +
-          `- expense_date: from the invoice; if missing use "${today}".\n` +
-          `- description: 1 short line summarizing what was purchased.\n` +
-          `- notes: any extra useful context (invoice #, VAT, etc.), else empty string.\n` +
-          `Return ONLY the JSON object, no markdown fences, no commentary.`,
+          `You are an expert bookkeeping OCR. Extract the expense from this receipt/invoice image and return STRICT JSON ONLY matching this schema:\n` +
+          `{"category": string, "description": string, "supplier": string, "amount": number, "currency": string, "expense_date": "YYYY-MM-DD", "notes": string}\n\n` +
+          `FIELD RULES (be strict):\n` +
+          `- amount: the FINAL TOTAL PAID (look for "Total", "Grand Total", "Amount Due", "Total Paid", "Balance Due", "الإجمالي", "المجموع الكلي", "المبلغ المستحق"). Number only, no currency symbol. Prefer the largest bottom-most total line. If multiple candidates, pick the one after tax/VAT (grand total). Use 0 only if truly unreadable.\n` +
+          `- expense_date: strict YYYY-MM-DD (e.g. 2026-07-08). Parse any date format on the invoice (DD/MM/YYYY, MMM D YYYY, etc.). If missing use "${today}".\n` +
+          `- supplier: the vendor / company / store name issuing the invoice (e.g. "EcoPack Solutions Ltd"). Keep proper nouns readable.\n` +
+          `- description: ONE short optimized ${langName} summary of what was purchased (e.g. "أكياس شحن وتغليف مخصصة مع شرائط حريرية"). Translate item names into ${langName}. Do NOT include the price, the vendor, or the date here.\n` +
+          `- category: one short ${langName} label from: Shipping, Packaging, Marketing, Utilities, Software, Meals, Travel, Office, Inventory, Rent, Salaries, Fees, Other (translated).\n` +
+          `- currency: 3-letter ISO code (BHD, USD, SAR, AED, KWD, QAR, OMR). If unclear default "BHD".\n` +
+          `- notes: invoice number, VAT number, or other useful context in ${langName}; else empty string.\n\n` +
+          `FALLBACK: if you cannot find a clearly-labeled total, take the largest monetary value that appears after any tax/VAT line.\n` +
+          `Return ONLY the JSON object. No markdown fences, no commentary, no prose.`,
       },
       isPdf
         ? { type: "file", file: { filename: "receipt.pdf", file_data: data.dataUrl } }
