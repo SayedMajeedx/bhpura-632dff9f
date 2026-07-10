@@ -439,6 +439,7 @@ function ProductDialog({ product, onSaved }: { product: Product | null; onSaved:
         image_url: form.image_url,
         is_active: form.is_active,
         media: form.media as any,
+        custom_fields: (form.custom_fields ?? []) as any,
       };
       const { error } = await (supabase.from("products") as any).insert(payload);
       if (error) return toast.error(error.message);
