@@ -55,6 +55,7 @@ type Variant = {
   id: string; product_id: string; sku: string | null; size: string | null; color: string | null; fabric: string | null;
   cost_price: number; selling_price: number; stock: number;
   stock_main: number; stock_incubator: number; barcode: string | null;
+  size_unit: string | null;
 };
 type Customization = { id: string; name: string; price_delta: number };
 
