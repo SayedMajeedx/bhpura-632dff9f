@@ -1223,6 +1223,24 @@ function InvoicePreview({ order, items, settings, shippingAddress, paymentBadge 
                           ))}
                         </ul>
                       )}
+                      {it.selected_variant && (it.selected_variant.size || it.selected_variant.color || it.selected_variant.fabric) && (
+                        <p className="mt-1 text-xs" style={{ opacity: 0.75 }}>
+                          {[
+                            it.selected_variant.size && `${isRTL ? "المقاس" : "Size"}: ${it.selected_variant.size}`,
+                            it.selected_variant.color && `${isRTL ? "اللون" : "Color"}: ${it.selected_variant.color}`,
+                            it.selected_variant.fabric && `${isRTL ? "القماش" : "Fabric"}: ${it.selected_variant.fabric}`,
+                          ].filter(Boolean).join(" · ")}
+                        </p>
+                      )}
+                      {it.custom_field_values && it.custom_field_values.length > 0 && (
+                        <ul className="mt-1 text-xs space-y-0.5" style={{ opacity: 0.75 }}>
+                          {it.custom_field_values.map((cf, ci) => (
+                            <li key={ci}>
+                              {isRTL ? (cf.label_ar || cf.label_en || cf.key) : (cf.label_en || cf.label_ar || cf.key)}: {cf.value}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
                     </td>
                     <td className="p-3 text-end">{num(it.quantity)}</td>
                     <td className="p-3 text-end whitespace-nowrap">{money(it.unit_price + it.customization_total)}</td>
