@@ -777,3 +777,217 @@ function StorefrontCustomizerCard({ brandId }: { brandId: string }) {
     </Card>
   );
 }
+
+// ---------------- Branches (Pickup) ----------------
+type BranchRow = {
+  id: string;
+  brand_id: string;
+  name_ar: string | null;
+  name_en: string | null;
+  location_ar: string | null;
+  location_en: string | null;
+  notes_ar: string | null;
+  notes_en: string | null;
+  is_active: boolean;
+};
+
+function BranchesCard({ brandId }: { brandId: string }) {
+  const { lang } = useI18n();
+  const isAr = lang === "ar";
+  const qc = useQueryClient();
+  const q = useQuery({
+    queryKey: ["branches", brandId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("branches" as any)
+        .select("*")
+        .eq("brand_id", brandId)
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+      return (data ?? []) as unknown as BranchRow[];
+    },
+  });
+  const [draft, setDraft] = useState<Partial<BranchRow>>({});
+  const addBranch = async () => {
+    const payload = {
+      brand_id: brandId,
+      name_ar: draft.name_ar?.trim() || null,
+      name_en: draft.name_en?.trim() || null,
+      location_ar: draft.location_ar?.trim() || null,
+      location_en: draft.location_en?.trim() || null,
+      notes_ar: draft.notes_ar?.trim() || null,
+      notes_en: draft.notes_en?.trim() || null,
+      is_active: true,
+    };
+    if (!payload.name_ar && !payload.name_en) {
+      toast.error(isAr ? "الاسم مطلوب" : "Name is required");
+      return;
+    }
+    const { error } = await (supabase.from("branches" as any) as any).insert(payload);
+    if (error) { toast.error(error.message); return; }
+    setDraft({});
+    qc.invalidateQueries({ queryKey: ["branches", brandId] });
+  };
+  const patch = async (id: string, changes: Partial<BranchRow>) => {
+    const { error } = await (supabase.from("branches" as any) as any).update(changes).eq("id", id);
+    if (error) toast.error(error.message);
+    qc.invalidateQueries({ queryKey: ["branches", brandId] });
+  };
+  const remove = async (id: string) => {
+    if (!confirm(isAr ? "حذف الفرع؟" : "Delete this branch?")) return;
+    const { error } = await (supabase.from("branches" as any) as any).delete().eq("id", id);
+    if (error) toast.error(error.message);
+    qc.invalidateQueries({ queryKey: ["branches", brandId] });
+  };
+  return (
+    <Card className="p-6 space-y-4">
+      <div>
+        <h3 className="text-lg font-semibold">{isAr ? "الفروع (للاستلام)" : "Branches (for Pickup)"}</h3>
+        <p className="text-sm text-muted-foreground">
+          {isAr ? "تظهر الفروع النشطة للعميل عند اختيار الاستلام من الفرع." : "Active branches appear at checkout when customer selects Pickup."}
+        </p>
+      </div>
+
+      <div className="space-y-3">
+        {(q.data ?? []).map((b) => (
+          <div key={b.id} className="rounded-lg border border-border p-3 space-y-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div>
+                <Label className="text-xs">{isAr ? "الاسم (عربي)" : "Name (Arabic)"}</Label>
+                <Input defaultValue={b.name_ar ?? ""} onBlur={(e) => e.target.value !== (b.name_ar ?? "") && patch(b.id, { name_ar: e.target.value || null })} />
+              </div>
+              <div>
+                <Label className="text-xs">{isAr ? "الاسم (إنجليزي)" : "Name (English)"}</Label>
+                <Input defaultValue={b.name_en ?? ""} onBlur={(e) => e.target.value !== (b.name_en ?? "") && patch(b.id, { name_en: e.target.value || null })} />
+              </div>
+              <div>
+                <Label className="text-xs">{isAr ? "الموقع (عربي)" : "Location (Arabic)"}</Label>
+                <Input defaultValue={b.location_ar ?? ""} onBlur={(e) => e.target.value !== (b.location_ar ?? "") && patch(b.id, { location_ar: e.target.value || null })} />
+              </div>
+              <div>
+                <Label className="text-xs">{isAr ? "الموقع (إنجليزي)" : "Location (English)"}</Label>
+                <Input defaultValue={b.location_en ?? ""} onBlur={(e) => e.target.value !== (b.location_en ?? "") && patch(b.id, { location_en: e.target.value || null })} />
+              </div>
+              <div className="sm:col-span-2">
+                <Label className="text-xs">{isAr ? "ملاحظات الاستلام (عربي)" : "Pickup notes (Arabic)"}</Label>
+                <Textarea rows={2} defaultValue={b.notes_ar ?? ""} onBlur={(e) => e.target.value !== (b.notes_ar ?? "") && patch(b.id, { notes_ar: e.target.value || null })} />
+              </div>
+              <div className="sm:col-span-2">
+                <Label className="text-xs">{isAr ? "ملاحظات الاستلام (إنجليزي)" : "Pickup notes (English)"}</Label>
+                <Textarea rows={2} defaultValue={b.notes_en ?? ""} onBlur={(e) => e.target.value !== (b.notes_en ?? "") && patch(b.id, { notes_en: e.target.value || null })} />
+              </div>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Switch checked={b.is_active} onCheckedChange={(v) => patch(b.id, { is_active: v })} />
+                <span className="text-sm">{b.is_active ? (isAr ? "مفعّل" : "Active") : (isAr ? "موقوف" : "Inactive")}</span>
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => remove(b.id)}>
+                <Trash2 className="h-4 w-4 me-1" />
+                {isAr ? "حذف" : "Delete"}
+              </Button>
+            </div>
+          </div>
+        ))}
+        {(q.data ?? []).length === 0 && (
+          <p className="text-sm text-muted-foreground">{isAr ? "لم يتم إضافة أي فروع بعد." : "No branches added yet."}</p>
+        )}
+      </div>
+
+      <div className="rounded-lg border border-dashed border-border p-3 space-y-2">
+        <div className="text-sm font-medium">{isAr ? "إضافة فرع جديد" : "Add new branch"}</div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <Input placeholder={isAr ? "الاسم (عربي)" : "Name (Arabic)"} value={draft.name_ar ?? ""} onChange={(e) => setDraft({ ...draft, name_ar: e.target.value })} />
+          <Input placeholder={isAr ? "الاسم (إنجليزي)" : "Name (English)"} value={draft.name_en ?? ""} onChange={(e) => setDraft({ ...draft, name_en: e.target.value })} />
+          <Input placeholder={isAr ? "الموقع (عربي)" : "Location (Arabic)"} value={draft.location_ar ?? ""} onChange={(e) => setDraft({ ...draft, location_ar: e.target.value })} />
+          <Input placeholder={isAr ? "الموقع (إنجليزي)" : "Location (English)"} value={draft.location_en ?? ""} onChange={(e) => setDraft({ ...draft, location_en: e.target.value })} />
+        </div>
+        <Button size="sm" onClick={addBranch}>{isAr ? "إضافة" : "Add branch"}</Button>
+      </div>
+    </Card>
+  );
+}
+
+// ---------------- Email Settings ----------------
+function EmailSettingsCard({ brandId }: { brandId: string }) {
+  const { lang } = useI18n();
+  const isAr = lang === "ar";
+  const [state, setState] = useState<{
+    email_sender_name: string;
+    email_intro_ar: string;
+    email_intro_en: string;
+    email_footer_ar: string;
+    email_footer_en: string;
+  } | null>(null);
+  const [saving, setSaving] = useState(false);
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("business_settings")
+        .select("email_sender_name, email_intro_ar, email_intro_en, email_footer_ar, email_footer_en")
+        .eq("brand_id", brandId)
+        .maybeSingle();
+      if (!data) return;
+      setState({
+        email_sender_name: (data as any).email_sender_name ?? "",
+        email_intro_ar: (data as any).email_intro_ar ?? "",
+        email_intro_en: (data as any).email_intro_en ?? "",
+        email_footer_ar: (data as any).email_footer_ar ?? "",
+        email_footer_en: (data as any).email_footer_en ?? "",
+      });
+    })();
+  }, [brandId]);
+  const save = async () => {
+    if (!state) return;
+    setSaving(true);
+    const { error } = await supabase
+      .from("business_settings")
+      .update({
+        email_sender_name: state.email_sender_name.trim() || null,
+        email_intro_ar: state.email_intro_ar.trim() || null,
+        email_intro_en: state.email_intro_en.trim() || null,
+        email_footer_ar: state.email_footer_ar.trim() || null,
+        email_footer_en: state.email_footer_en.trim() || null,
+      } as any)
+      .eq("brand_id", brandId);
+    setSaving(false);
+    if (error) toast.error(error.message); else toast.success(isAr ? "تم الحفظ" : "Saved");
+  };
+  if (!state) return null;
+  return (
+    <Card className="p-6 space-y-4">
+      <div>
+        <h3 className="text-lg font-semibold">{isAr ? "إعدادات بريد الطلبات" : "Order email settings"}</h3>
+        <p className="text-sm text-muted-foreground">
+          {isAr ? "خصّص اسم المرسل والنصوص المرسلة للعميل عند تأكيد الطلب." : "Customize sender name and messages sent to customers with the order confirmation."}
+        </p>
+      </div>
+      <div>
+        <Label>{isAr ? "اسم المُرسِل (يظهر في البريد)" : "Sender display name (From)"}</Label>
+        <Input value={state.email_sender_name} onChange={(e) => setState({ ...state, email_sender_name: e.target.value })} placeholder={isAr ? "مثل: متجر بيورا" : "e.g. Pura Store"} />
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <Label>{isAr ? "نص الترحيب (عربي)" : "Intro (Arabic)"}</Label>
+          <Textarea rows={3} value={state.email_intro_ar} onChange={(e) => setState({ ...state, email_intro_ar: e.target.value })} />
+        </div>
+        <div>
+          <Label>{isAr ? "نص الترحيب (إنجليزي)" : "Intro (English)"}</Label>
+          <Textarea rows={3} value={state.email_intro_en} onChange={(e) => setState({ ...state, email_intro_en: e.target.value })} />
+        </div>
+        <div>
+          <Label>{isAr ? "التذييل (عربي)" : "Footer (Arabic)"}</Label>
+          <Textarea rows={2} value={state.email_footer_ar} onChange={(e) => setState({ ...state, email_footer_ar: e.target.value })} />
+        </div>
+        <div>
+          <Label>{isAr ? "التذييل (إنجليزي)" : "Footer (English)"}</Label>
+          <Textarea rows={2} value={state.email_footer_en} onChange={(e) => setState({ ...state, email_footer_en: e.target.value })} />
+        </div>
+      </div>
+      <div className="flex justify-end">
+        <Button size="sm" onClick={save} disabled={saving}>{isAr ? "حفظ إعدادات البريد" : "Save email settings"}</Button>
+      </div>
+    </Card>
+  );
+}
+
