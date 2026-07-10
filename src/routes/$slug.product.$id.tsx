@@ -284,7 +284,7 @@ function ProductDetail() {
               {variants.map((v) => {
                 const oos = v.stock_main <= 0;
                 const active = v.id === variantId;
-                const label = [v.size, v.color, v.fabric].filter(Boolean).join(" · ") || t("متغيّر", "Variant");
+                const label = [formatSizeWithUnit(v.size, v.size_unit, lang), v.color, v.fabric].filter(Boolean).join(" · ") || t("متغيّر", "Variant");
                 const style: React.CSSProperties = active
                   ? { backgroundColor: primary, color: primaryFg, borderColor: primary }
                   : {};
