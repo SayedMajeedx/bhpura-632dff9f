@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Plus, Pencil, Trash2, Package, TrendingUp, Wand as Wand2, Printer, Sparkles, Loader2 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { translateProductText } from "@/lib/translate.functions";
@@ -27,6 +28,14 @@ export const Route = createFileRoute("/_authenticated/admin/b/$slug/inventory")(
 });
 
 type MediaItem = { type: "image" | "video"; url: string };
+type CustomField = {
+  key: string;
+  label_ar: string | null;
+  label_en: string | null;
+  type: "text" | "number" | "select";
+  options?: string[];
+  required?: boolean;
+};
 type Product = {
   id: string;
   name: string;
@@ -39,6 +48,7 @@ type Product = {
   image_url: string | null;
   is_active: boolean;
   media: MediaItem[];
+  custom_fields: CustomField[] | null;
 };
 type Variant = {
   id: string; product_id: string; sku: string | null; size: string | null; color: string | null; fabric: string | null;
@@ -68,7 +78,11 @@ function Inventory() {
     queryFn: async () => {
       const { data, error } = await supabase.from("products").select("*").eq("brand_id", brandId).order("created_at", { ascending: false });
       if (error) throw error;
-      return (data ?? []).map((p: any) => ({ ...p, media: Array.isArray(p.media) ? p.media : [] })) as Product[];
+      return (data ?? []).map((p: any) => ({
+        ...p,
+        media: Array.isArray(p.media) ? p.media : [],
+        custom_fields: Array.isArray(p.custom_fields) ? p.custom_fields : [],
+      })) as Product[];
     },
   });
 
@@ -269,6 +283,7 @@ function ProductDialog({ product, onSaved }: { product: Product | null; onSaved:
     image_url: product?.image_url ?? "",
     is_active: product?.is_active ?? true,
     media: (product?.media ?? []) as MediaItem[],
+    custom_fields: (Array.isArray(product?.custom_fields) ? product!.custom_fields : []) as CustomField[],
   };
   const [form, setForm] = useState(initialForm);
   const [uploading, setUploading] = useState(false);
@@ -292,6 +307,7 @@ function ProductDialog({ product, onSaved }: { product: Product | null; onSaved:
       image_url: product?.image_url ?? "",
       is_active: product?.is_active ?? true,
       media: (product?.media ?? []) as MediaItem[],
+      custom_fields: (Array.isArray(product?.custom_fields) ? product!.custom_fields : []) as CustomField[],
     });
   }, [product?.id]);
 
@@ -407,6 +423,7 @@ function ProductDialog({ product, onSaved }: { product: Product | null; onSaved:
         image_url: form.image_url,
         is_active: form.is_active,
         media: form.media as any,
+        custom_fields: (form.custom_fields ?? []) as any,
       };
       const { error } = await supabase.from("products").update(patch).eq("id", product.id);
       if (error) return toast.error(error.message);
@@ -423,6 +440,7 @@ function ProductDialog({ product, onSaved }: { product: Product | null; onSaved:
         image_url: form.image_url,
         is_active: form.is_active,
         media: form.media as any,
+        custom_fields: (form.custom_fields ?? []) as any,
       };
       const { error } = await (supabase.from("products") as any).insert(payload);
       if (error) return toast.error(error.message);
@@ -540,6 +558,70 @@ function ProductDialog({ product, onSaved }: { product: Product | null; onSaved:
         onConfirm={handleCropConfirmed}
       />
       {pendingVideo && null}
+
+      <div className="rounded-lg border border-border p-3 space-y-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-sm font-medium">{isAr ? "حقول مخصّصة للمنتج" : "Custom product fields"}</div>
+            <div className="text-xs text-muted-foreground">
+              {isAr ? "أضف حتى 5 حقول (نص/رقم/قائمة) يظهرون للعميل في صفحة المنتج." : "Add up to 5 fields (text/number/select) that appear to customers on the product page."}
+            </div>
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={(form.custom_fields ?? []).length >= 5}
+            onClick={() => setForm({
+              ...form,
+              custom_fields: [
+                ...(form.custom_fields ?? []),
+                { key: `f${Date.now()}`, label_ar: "", label_en: "", type: "text", options: [], required: false },
+              ],
+            })}
+          >
+            {isAr ? "إضافة حقل" : "Add field"}
+          </Button>
+        </div>
+        {(form.custom_fields ?? []).map((f, i) => {
+          const upd = (patch: Partial<CustomField>) => {
+            const next = [...form.custom_fields];
+            next[i] = { ...next[i], ...patch };
+            setForm({ ...form, custom_fields: next });
+          };
+          const remove = () => setForm({ ...form, custom_fields: form.custom_fields.filter((_, j) => j !== i) });
+          return (
+            <div key={f.key} className="rounded-md border border-border p-2 space-y-2">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <Input placeholder={isAr ? "التسمية بالعربية" : "Arabic label"} value={f.label_ar ?? ""} onChange={(e) => upd({ label_ar: e.target.value })} />
+                <Input placeholder={isAr ? "التسمية بالإنجليزية" : "English label"} value={f.label_en ?? ""} onChange={(e) => upd({ label_en: e.target.value })} />
+                <Select value={f.type} onValueChange={(v) => upd({ type: v as CustomField["type"] })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="text">{isAr ? "نص" : "Text"}</SelectItem>
+                    <SelectItem value="number">{isAr ? "رقم" : "Number"}</SelectItem>
+                    <SelectItem value="select">{isAr ? "قائمة اختيار" : "Dropdown"}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {f.type === "select" && (
+                <Input
+                  placeholder={isAr ? "الخيارات مفصولة بفاصلة (,)" : "Options separated by commas"}
+                  value={(f.options ?? []).join(", ")}
+                  onChange={(e) => upd({ options: e.target.value.split(",").map((s) => s.trim()).filter(Boolean) })}
+                />
+              )}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-xs">
+                  <Switch checked={!!f.required} onCheckedChange={(v) => upd({ required: v })} />
+                  <span>{isAr ? "إلزامي" : "Required"}</span>
+                </div>
+                <Button size="sm" variant="ghost" onClick={remove}>{isAr ? "حذف" : "Remove"}</Button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
       <DialogFooter><Button onClick={save}>{t("common.save")}</Button></DialogFooter>
     </DialogContent>
   );

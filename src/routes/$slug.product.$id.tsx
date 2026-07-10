@@ -22,6 +22,15 @@ type Variant = {
   stock_main: number;
 };
 
+type CustomField = {
+  key: string;
+  label_ar: string | null;
+  label_en: string | null;
+  type: "text" | "number" | "select";
+  options?: string[];
+  required?: boolean;
+};
+
 type Product = {
   id: string;
   name: string;
@@ -32,6 +41,7 @@ type Product = {
   description_en: string | null;
   image_url: string | null;
   media: unknown;
+  custom_fields: CustomField[] | null;
   product_variants: Variant[];
 };
 
@@ -42,13 +52,14 @@ function ProductDetail() {
   const [mediaIdx, setMediaIdx] = useState(0);
   const [variantId, setVariantId] = useState<string | null>(null);
   const [qty, setQty] = useState(1);
+  const [cfValues, setCfValues] = useState<Record<string, string>>({});
 
   const { data: product, isLoading } = useQuery({
     queryKey: ["storefront", brand.slug, "product", id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("products")
-        .select("id, name, name_ar, name_en, description, description_ar, description_en, image_url, media, product_variants(id, size, color, fabric, selling_price, stock_main)")
+        .select("id, name, name_ar, name_en, description, description_ar, description_en, image_url, media, custom_fields, product_variants(id, size, color, fabric, selling_price, stock_main)")
         .eq("id", id)
         .eq("brand_id", brand.id)
         .eq("is_active", true)
@@ -70,7 +81,10 @@ function ProductDetail() {
 
   const variants = product?.product_variants ?? [];
   const variant = variantId ? variants.find((v) => v.id === variantId) : null;
-  const cover = variant?.selling_price;
+  const customFields = useMemo<CustomField[]>(
+    () => (Array.isArray(product?.custom_fields) ? (product!.custom_fields as CustomField[]) : []),
+    [product],
+  );
 
   if (isLoading) {
     return (
@@ -106,11 +120,27 @@ function ProductDetail() {
   const displayName = pickName(lang, product);
   const displayDescription = pickDescription(lang, product);
 
+  const cfLabel = (f: CustomField) => (lang === "ar" ? (f.label_ar || f.label_en || f.key) : (f.label_en || f.label_ar || f.key));
+
   const doAdd = () => {
     if (!variant) {
       toast.error(t("اختر خياراً أولاً", "Please select an option"));
       return;
     }
+    for (const f of customFields) {
+      if (f.required && !(cfValues[f.key] ?? "").trim()) {
+        toast.error(t(`الحقل مطلوب: ${cfLabel(f)}`, `Required field: ${cfLabel(f)}`));
+        return;
+      }
+    }
+    const custom = customFields
+      .map((f) => ({
+        key: f.key,
+        label_ar: f.label_ar,
+        label_en: f.label_en,
+        value: (cfValues[f.key] ?? "").trim(),
+      }))
+      .filter((v) => v.value.length > 0);
     addToCart({
       variant_id: variant.id,
       product_id: product.id,
@@ -121,11 +151,14 @@ function ProductDetail() {
       price: variant.selling_price,
       size: variant.size,
       color: variant.color,
+      fabric: variant.fabric,
       qty,
       max_stock: variant.stock_main,
+      custom_fields: custom,
     });
     toast.success(t("تمت الإضافة إلى السلة", "Added to cart"));
   };
+
 
   return (
     <div className="mx-auto max-w-6xl px-4 sm:px-6 py-6 sm:py-10 grid md:grid-cols-2 gap-8">
@@ -220,6 +253,42 @@ function ProductDetail() {
                 );
               })}
             </div>
+          </div>
+        )}
+
+        {customFields.length > 0 && (
+          <div className="mb-4 space-y-3">
+            {customFields.map((f) => {
+              const label = cfLabel(f);
+              const val = cfValues[f.key] ?? "";
+              const set = (v: string) => setCfValues((s) => ({ ...s, [f.key]: v }));
+              return (
+                <div key={f.key}>
+                  <label className="block text-sm font-medium mb-1">
+                    {label}{f.required && <span className="text-destructive ms-1">*</span>}
+                  </label>
+                  {f.type === "select" ? (
+                    <select
+                      value={val}
+                      onChange={(e) => set(e.target.value)}
+                      className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+                    >
+                      <option value="">{t("اختر...", "Select...")}</option>
+                      {(f.options ?? []).map((o) => (
+                        <option key={o} value={o}>{o}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type={f.type === "number" ? "number" : "text"}
+                      value={val}
+                      onChange={(e) => set(e.target.value)}
+                      className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+                    />
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
 

@@ -91,6 +91,25 @@ function Checkout() {
     }
   }, [fulfillmentOptions, fulfillment]);
 
+  const [branches, setBranches] = useState<Array<{ id: string; name_ar: string | null; name_en: string | null; location_ar: string | null; location_en: string | null; notes_ar: string | null; notes_en: string | null }>>([]);
+  const [branchId, setBranchId] = useState<string>("");
+  useEffect(() => {
+    if (!settings.pickup_enabled) return;
+    (async () => {
+      const { data } = await supabase
+        .from("branches" as any)
+        .select("id, name_ar, name_en, location_ar, location_en, notes_ar, notes_en")
+        .eq("brand_id", brand.id)
+        .eq("is_active", true)
+        .order("created_at", { ascending: true });
+      const list = ((data ?? []) as any[]);
+      setBranches(list);
+      setBranchId((cur) => cur || (list[0]?.id ?? ""));
+    })();
+  }, [brand.id, settings.pickup_enabled]);
+  const branchLabel = (b: typeof branches[number]) => (lang === "ar" ? (b.name_ar || b.name_en || "") : (b.name_en || b.name_ar || ""));
+  const branchLoc = (b: typeof branches[number]) => (lang === "ar" ? (b.location_ar || b.location_en || "") : (b.location_en || b.location_ar || ""));
+
   const shipping = fulfillment === "delivery" ? Number(settings.delivery_fee || 0) : 0;
   const grandTotal = cartTotal + shipping;
 
@@ -122,6 +141,10 @@ function Checkout() {
       toast.error(t("اختر طريقة دفع", "Choose a payment method"));
       return;
     }
+    if (fulfillment === "pickup" && branches.length > 0 && !branchId) {
+      toast.error(t("اختر الفرع", "Select a branch"));
+      return;
+    }
     setSubmitting(true);
     try {
       const { data, error } = await supabase.rpc("place_storefront_order", {
@@ -137,10 +160,20 @@ function Checkout() {
           house: form.house,
           flat: form.flat,
         },
-        p_items: cart.map((c) => ({ variant_id: c.variant_id, quantity: c.qty })),
+        p_items: cart.map((c) => ({
+          variant_id: c.variant_id,
+          quantity: c.qty,
+          selected_variant: {
+            size: c.size,
+            color: c.color,
+            fabric: c.fabric ?? null,
+          },
+          custom_field_values: c.custom_fields ?? [],
+        })),
         p_payment_method: method,
         p_notes: form.notes || undefined,
         p_fulfillment: fulfillment,
+        p_branch_id: fulfillment === "pickup" ? (branchId || null) : null,
       } as any);
       if (error) throw error;
       const orderId = (data as any)?.order_id;
@@ -241,6 +274,41 @@ function Checkout() {
             </div>
           </Card>
         )}
+
+        {fulfillment === "pickup" && (
+          <Card className="p-5 space-y-3">
+            <h2 className="font-display text-xl">{t("اختر الفرع", "Choose branch")}</h2>
+            {branches.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                {t("لا توجد فروع متاحة حاليًا.", "No branches available right now.")}
+              </p>
+            ) : (
+              <div className="grid gap-2">
+                {branches.map((b) => {
+                  const active = branchId === b.id;
+                  return (
+                    <button
+                      key={b.id}
+                      type="button"
+                      onClick={() => setBranchId(b.id)}
+                      className={`text-start p-3 rounded-lg border ${active ? "border-current" : "border-input"}`}
+                      style={active ? { borderColor: settings.primary_color, backgroundColor: `${settings.primary_color}11` } : undefined}
+                    >
+                      <div className="font-medium">{branchLabel(b)}</div>
+                      {branchLoc(b) && <div className="text-xs text-muted-foreground">{branchLoc(b)}</div>}
+                      {(lang === "ar" ? b.notes_ar : b.notes_en) && (
+                        <div className="text-xs text-muted-foreground mt-1">
+                          {lang === "ar" ? b.notes_ar : b.notes_en}
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </Card>
+        )}
+
 
         {fulfillment === "delivery" && (
           <Card className="p-5 space-y-4">

@@ -83,6 +83,8 @@ type Item = {
   customizations: { name: string; price_delta: number }[];
   customization_total: number; line_total: number;
   location: "main" | "incubator";
+  selected_variant?: { size?: string | null; color?: string | null; fabric?: string | null } | null;
+  custom_field_values?: Array<{ key: string; label_ar: string | null; label_en: string | null; value: string }>;
 };
 
 function OrderDetail() {
@@ -154,6 +156,8 @@ function OrderDetail() {
         customization_total: Number(i.customization_total),
         line_total: Number(i.line_total),
         location: (i.location === "incubator" ? "incubator" : "main") as "main" | "incubator",
+        selected_variant: i.selected_variant ?? null,
+        custom_field_values: Array.isArray(i.custom_field_values) ? i.custom_field_values : [],
       })));
     }
   }, [orderQ.data]);
@@ -776,6 +780,31 @@ function OrderDetail() {
                   </div>
                 )}
 
+                {(it.selected_variant || (it.custom_field_values && it.custom_field_values.length > 0)) && (
+                  <div className="rounded-md border border-border bg-muted/40 p-3 text-xs space-y-1">
+                    <div className="font-medium text-sm">
+                      {isAr ? "اختيارات العميل" : "Customer selections"}
+                    </div>
+                    {it.selected_variant && (
+                      <div className="flex flex-wrap gap-x-3 gap-y-1">
+                        {it.selected_variant.size && <span><b>{isAr ? "المقاس" : "Size"}:</b> {it.selected_variant.size}</span>}
+                        {it.selected_variant.color && <span><b>{isAr ? "اللون" : "Color"}:</b> {it.selected_variant.color}</span>}
+                        {it.selected_variant.fabric && <span><b>{isAr ? "القماش" : "Fabric"}:</b> {it.selected_variant.fabric}</span>}
+                      </div>
+                    )}
+                    {it.custom_field_values && it.custom_field_values.length > 0 && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-0.5 pt-1">
+                        {it.custom_field_values.map((cf, i) => (
+                          <div key={i}>
+                            <b>{isAr ? (cf.label_ar || cf.label_en || cf.key) : (cf.label_en || cf.label_ar || cf.key)}:</b> {cf.value}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+
                 <div>
                   <Label className="text-xs">{t("orderDetail.customizations")}</Label>
                   <div className="flex flex-wrap gap-2 mt-1">
@@ -976,6 +1005,30 @@ function toArabicDigits(str: string) {
   return str.replace(/[0-9]/g, (d) => map[+d]);
 }
 
+function InvoiceBranchName({ brandId, branchId, isRTL }: { brandId: string; branchId: string; isRTL: boolean }) {
+  const q = useQuery({
+    queryKey: ["branch", brandId, branchId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("branches" as any)
+        .select("name_ar, name_en, location_ar, location_en")
+        .eq("id", branchId)
+        .maybeSingle();
+      return data as any;
+    },
+    enabled: !!branchId,
+  });
+  const b = q.data;
+  if (!b) return null;
+  const name = isRTL ? (b.name_ar || b.name_en) : (b.name_en || b.name_ar);
+  const loc = isRTL ? (b.location_ar || b.location_en) : (b.location_en || b.location_ar);
+  return (
+    <p className="text-sm" style={{ opacity: 0.85 }}>
+      {name}{loc ? ` — ${loc}` : ""}
+    </p>
+  );
+}
+
 function InvoicePreview({ order, items, settings, shippingAddress, paymentBadge }: { order: any; items: Item[]; settings: any; shippingAddress?: SavedAddress | null; paymentBadge?: PaymentBadge }) {
   const currency = order.currency;
   const color = settings.primary_color || "#8b6f47";
@@ -1117,6 +1170,24 @@ function InvoicePreview({ order, items, settings, shippingAddress, paymentBadge 
             </div>
           )}
 
+          {(order.fulfillment_method || order.branch_id) && (
+            <div className="mb-6 text-sm" style={{ textAlign: "start" }}>
+              <p className="text-xs uppercase tracking-wider mb-1" style={{ opacity: 0.6 }}>
+                {isRTL ? "طريقة التسليم" : "Fulfillment"}
+              </p>
+              <p>
+                {order.fulfillment_method === "pickup"
+                  ? (isRTL ? "استلام من الفرع" : "Pickup from branch")
+                  : (isRTL ? "توصيل" : "Delivery")}
+              </p>
+              {order.branch_id && (
+                <InvoiceBranchName brandId={order.brand_id} branchId={order.branch_id} isRTL={isRTL} />
+              )}
+            </div>
+          )}
+
+
+
           <div className="pdf-table-wrap -mx-4 sm:mx-0 overflow-x-auto print:overflow-visible print:mx-0">
             <table className="pdf-line-items w-full min-w-[520px] text-sm mb-6">
               <thead>
@@ -1149,6 +1220,24 @@ function InvoicePreview({ order, items, settings, shippingAddress, paymentBadge 
                         <ul className="mt-1 text-xs space-y-0.5" style={{ opacity: 0.75 }}>
                           {it.customizations.map((c, ci) => (
                             <li key={ci}>+ {c.name} ({money(c.price_delta)})</li>
+                          ))}
+                        </ul>
+                      )}
+                      {it.selected_variant && (it.selected_variant.size || it.selected_variant.color || it.selected_variant.fabric) && (
+                        <p className="mt-1 text-xs" style={{ opacity: 0.75 }}>
+                          {[
+                            it.selected_variant.size && `${isRTL ? "المقاس" : "Size"}: ${it.selected_variant.size}`,
+                            it.selected_variant.color && `${isRTL ? "اللون" : "Color"}: ${it.selected_variant.color}`,
+                            it.selected_variant.fabric && `${isRTL ? "القماش" : "Fabric"}: ${it.selected_variant.fabric}`,
+                          ].filter(Boolean).join(" · ")}
+                        </p>
+                      )}
+                      {it.custom_field_values && it.custom_field_values.length > 0 && (
+                        <ul className="mt-1 text-xs space-y-0.5" style={{ opacity: 0.75 }}>
+                          {it.custom_field_values.map((cf, ci) => (
+                            <li key={ci}>
+                              {isRTL ? (cf.label_ar || cf.label_en || cf.key) : (cf.label_en || cf.label_ar || cf.key)}: {cf.value}
+                            </li>
                           ))}
                         </ul>
                       )}
