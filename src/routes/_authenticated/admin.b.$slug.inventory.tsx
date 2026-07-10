@@ -721,7 +721,20 @@ function VariantList({ productId, productName, businessName, variants, onChanged
             })}
             {adding && (
               <tr className="border-t border-border bg-secondary/40">
-                <td className="py-2 pe-3"><Input className="h-8 w-16 text-start" value={row.size} onChange={(e) => setRow({ ...row, size: e.target.value })} /></td>
+                <td className="py-2 pe-3">
+                  <div className="inline-flex items-center gap-1">
+                    <Input className="h-8 w-16 text-start" value={row.size} onChange={(e) => setRow({ ...row, size: e.target.value })} />
+                    <select
+                      className="h-8 rounded border border-input bg-background px-1 text-xs"
+                      value={row.size_unit}
+                      onChange={(e) => setRow({ ...row, size_unit: e.target.value })}
+                    >
+                      {SIZE_UNITS.map((u) => (
+                        <option key={u} value={u}>{u === "" ? (isAr ? "بدون" : "—") : u}</option>
+                      ))}
+                    </select>
+                  </div>
+                </td>
                 <td className="py-2 pe-3"><Input className="h-8 w-20 text-start" value={row.color} onChange={(e) => setRow({ ...row, color: e.target.value })} /></td>
                 <td className="py-2 pe-3"><Input className="h-8 w-20 text-start" value={row.fabric} onChange={(e) => setRow({ ...row, fabric: e.target.value })} /></td>
                 <td className="py-2 pe-3"><Input className="h-8 w-24 text-start" value={row.sku} onChange={(e) => setRow({ ...row, sku: e.target.value })} /></td>
