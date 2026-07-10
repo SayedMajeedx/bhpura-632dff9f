@@ -1005,6 +1005,30 @@ function toArabicDigits(str: string) {
   return str.replace(/[0-9]/g, (d) => map[+d]);
 }
 
+function InvoiceBranchName({ brandId, branchId, isRTL }: { brandId: string; branchId: string; isRTL: boolean }) {
+  const q = useQuery({
+    queryKey: ["branch", brandId, branchId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("branches" as any)
+        .select("name_ar, name_en, location_ar, location_en")
+        .eq("id", branchId)
+        .maybeSingle();
+      return data as any;
+    },
+    enabled: !!branchId,
+  });
+  const b = q.data;
+  if (!b) return null;
+  const name = isRTL ? (b.name_ar || b.name_en) : (b.name_en || b.name_ar);
+  const loc = isRTL ? (b.location_ar || b.location_en) : (b.location_en || b.location_ar);
+  return (
+    <p className="text-sm" style={{ opacity: 0.85 }}>
+      {name}{loc ? ` — ${loc}` : ""}
+    </p>
+  );
+}
+
 function InvoicePreview({ order, items, settings, shippingAddress, paymentBadge }: { order: any; items: Item[]; settings: any; shippingAddress?: SavedAddress | null; paymentBadge?: PaymentBadge }) {
   const currency = order.currency;
   const color = settings.primary_color || "#8b6f47";
