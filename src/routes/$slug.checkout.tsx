@@ -146,6 +146,12 @@ function Checkout() {
       const orderId = (data as any)?.order_id;
       clearCart();
       toast.success(t("تم استلام طلبك!", "Order placed!"));
+      // Fire-and-forget confirmation email (respects storefront language).
+      if (orderId && form.email) {
+        supabase.functions.invoke("send-order-email", {
+          body: { order_id: orderId, lang: (typeof document !== "undefined" && document.documentElement.dir === "rtl") ? "ar" : "en" },
+        }).catch((err) => console.warn("[send-order-email]", err));
+      }
       navigate({
         to: "/$slug/thank-you/$orderId",
         params: { slug: brand.slug, orderId: String(orderId ?? "") },

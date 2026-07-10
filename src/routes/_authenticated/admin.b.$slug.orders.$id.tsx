@@ -8,9 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Plus, Trash2, Printer, Save, Send, Search, Star, Receipt, Link as LinkIcon, ScanLine } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Printer, Save, Send, Search, Star, Receipt, Link as LinkIcon, ScanLine, Mail, Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { formatMoney } from "@/lib/format";
 import { useT, useI18n } from "@/lib/i18n";
@@ -548,6 +547,7 @@ function OrderDetail() {
         </Link>
         <div className="flex flex-wrap gap-2">
           <SendInvoiceDialog order={order} totals={totals} settings={settingsQ.data} currency={currency} />
+          <ResendConfirmationEmailButton order={order} lang={lang} onDone={() => qc.invalidateQueries({ queryKey: ["order", id] })} />
           <Button variant="outline" onClick={copyLink}><LinkIcon className="h-4 w-4 mr-2" /> {t("orders.copyLink")}</Button>
           <Button variant="outline" onClick={printReceipt}><Receipt className="h-4 w-4 mr-2" /> {t("orders.printReceipt")}</Button>
           <Button variant="outline" onClick={async () => {
@@ -1218,6 +1218,52 @@ function InvoicePreview({ order, items, settings, shippingAddress, paymentBadge 
 
 type Tpl = { id: string; name: string; channel: "email" | "whatsapp" | "both"; subject: string | null; body: string; is_default: boolean };
 
+function ResendConfirmationEmailButton({ order, lang, onDone }: { order: any; lang: "ar" | "en"; onDone: () => void }) {
+  const [sending, setSending] = useState(false);
+  const status: string = order?.confirmation_email_status ?? "pending";
+  const sentAt = order?.confirmation_email_sent_at as string | null | undefined;
+  const err = order?.confirmation_email_error as string | null | undefined;
+
+  const color =
+    status === "sent" ? "text-green-600"
+    : status === "failed" ? "text-destructive"
+    : "text-muted-foreground";
+
+  const label = lang === "ar"
+    ? (status === "sent" ? "إعادة إرسال البريد" : status === "failed" ? "إعادة المحاولة" : "إرسال بريد التأكيد")
+    : (status === "sent" ? "Resend confirmation email" : status === "failed" ? "Retry confirmation email" : "Send confirmation email");
+
+  const title = err ? `${lang === "ar" ? "فشل: " : "Failed: "}${err}` : sentAt ? `${lang === "ar" ? "أُرسل: " : "Sent: "}${new Date(sentAt).toLocaleString()}` : undefined;
+
+  const onClick = async () => {
+    if (!order?.id) return;
+    setSending(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-order-email", {
+        body: { order_id: order.id, lang },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error(String((data as any).error));
+      toast.success(lang === "ar" ? "تم إرسال بريد التأكيد" : "Confirmation email sent");
+    } catch (e: any) {
+      toast.error(e?.message ?? (lang === "ar" ? "فشل الإرسال" : "Failed to send"));
+    } finally {
+      setSending(false);
+      onDone();
+    }
+  };
+
+  return (
+    <Button variant="outline" onClick={onClick} disabled={sending} title={title}>
+      {sending
+        ? <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+        : <Mail className={`h-4 w-4 mr-2 ${color}`} />}
+      {label}
+    </Button>
+  );
+}
+
+
 function renderTemplate(str: string, vars: Record<string, string>) {
   return str.replace(/\{\{\s*(\w+)\s*\}\}/g, (_, k) => vars[k] ?? "");
 }
@@ -1266,22 +1312,17 @@ function SendInvoiceDialog({ order, totals, settings, currency }: { order: any; 
   });
 
   const [selectedId, setSelectedId] = useState<string>("__default");
-  const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
 
   // Refresh fields from customer + selected template whenever dialog opens or selection/order changes
   useEffect(() => {
     if (!open) return;
-    setEmail(order?.customers?.email ?? "");
     setPhone(order?.customers?.phone ?? "");
     const tpl = templatesQ.data?.find((t) => t.id === selectedId);
-    const rawSubject = tpl?.subject ?? `Invoice #{{invoice_number}} from {{business_name}}`;
     const rawBody = tpl?.body ?? defaultBody();
-    setSubject(renderTemplate(rawSubject, vars).trim());
     setMessage(renderTemplate(rawBody, vars));
-  }, [open, selectedId, templatesQ.data, vars]);
+  }, [open, selectedId, templatesQ.data, vars, order?.customers?.phone]);
 
   // Auto-pick default template once loaded
   useEffect(() => {
@@ -1290,11 +1331,6 @@ function SendInvoiceDialog({ order, totals, settings, currency }: { order: any; 
     if (def) setSelectedId(def.id);
   }, [templatesQ.data, selectedId]);
 
-  const openEmail = () => {
-    if (!email) return toast.error("This customer has no email on file — add it in Customers or type one here");
-    const href = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`;
-    window.location.href = href;
-  };
 
   const openWhatsApp = () => {
     const digits = (phone || "").replace(/[^\d]/g, "");
@@ -1312,12 +1348,12 @@ function SendInvoiceDialog({ order, totals, settings, currency }: { order: any; 
     <>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <Button variant="outline"><Send className="h-4 w-4 mr-2" /> {t("orderDetail.sendInvoice")}</Button>
+          <Button variant="outline"><Send className="h-4 w-4 mr-2" /> {t("orderDetail.sendInvoiceWa")}</Button>
         </DialogTrigger>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{t("orderDetail.sendInvoice")}</DialogTitle>
-            <DialogDescription>Pick a template, tweak the message, then send via email or WhatsApp.</DialogDescription>
+            <DialogTitle>{t("orderDetail.sendInvoiceWa")}</DialogTitle>
+            <DialogDescription>Pick a template, tweak the message, then open WhatsApp.</DialogDescription>
           </DialogHeader>
 
           <div className="flex gap-2 items-end">
@@ -1336,43 +1372,20 @@ function SendInvoiceDialog({ order, totals, settings, currency }: { order: any; 
             <Button variant="outline" size="sm" onClick={() => setManageOpen(true)}>Manage</Button>
           </div>
 
-          <Tabs defaultValue="email" className="mt-2">
-            <TabsList className="grid grid-cols-2 w-full">
-              <TabsTrigger value="email">Email</TabsTrigger>
-              <TabsTrigger value="whatsapp">WhatsApp</TabsTrigger>
-            </TabsList>
-            <TabsContent value="email" className="space-y-3 mt-4">
-              <div>
-                <Label>To (from customer)</Label>
-                <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="customer@example.com" />
-              </div>
-              <div>
-                <Label>Subject</Label>
-                <Input value={subject} onChange={(e) => setSubject(e.target.value)} />
-              </div>
-              <div>
-                <Label>Message</Label>
-                <Textarea rows={10} value={message} onChange={(e) => setMessage(e.target.value)} />
-              </div>
-              <DialogFooter>
-                <Button onClick={openEmail}><Send className="h-4 w-4 mr-2" /> Open email app</Button>
-              </DialogFooter>
-            </TabsContent>
-            <TabsContent value="whatsapp" className="space-y-3 mt-4">
-              <div>
-                <Label>Phone (country code + number)</Label>
-                <PhoneInput value={phone} onChange={setPhone} />
-              </div>
-              <div>
-                <Label>Message</Label>
-                <Textarea rows={10} value={message} onChange={(e) => setMessage(e.target.value)} />
-              </div>
-              <p className="text-xs text-muted-foreground">Opens WhatsApp Web or the WhatsApp app with the message pre-filled — you send it manually. Attach the printed PDF there if needed.</p>
-              <DialogFooter>
-                <Button onClick={openWhatsApp}><Send className="h-4 w-4 mr-2" /> Open WhatsApp</Button>
-              </DialogFooter>
-            </TabsContent>
-          </Tabs>
+          <div className="space-y-3 mt-4">
+            <div>
+              <Label>Phone (country code + number)</Label>
+              <PhoneInput value={phone} onChange={setPhone} />
+            </div>
+            <div>
+              <Label>Message</Label>
+              <Textarea rows={10} value={message} onChange={(e) => setMessage(e.target.value)} />
+            </div>
+            <p className="text-xs text-muted-foreground">Opens WhatsApp Web or the WhatsApp app with the message pre-filled — you send it manually. Attach the printed PDF there if needed.</p>
+            <DialogFooter>
+              <Button onClick={openWhatsApp}><Send className="h-4 w-4 mr-2" /> Open WhatsApp</Button>
+            </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
 
@@ -1385,6 +1398,7 @@ function SendInvoiceDialog({ order, totals, settings, currency }: { order: any; 
     </>
   );
 }
+
 
 function ManageTemplatesDialog({ open, onOpenChange, templates, onChanged }: {
   open: boolean; onOpenChange: (o: boolean) => void; templates: Tpl[]; onChanged: () => void;

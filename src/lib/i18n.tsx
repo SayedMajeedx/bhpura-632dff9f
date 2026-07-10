@@ -244,6 +244,7 @@ const en: Dict = {
 
   "orderDetail.back": "Back to orders",
   "orderDetail.sendInvoice": "Send invoice",
+  "orderDetail.sendInvoiceWa": "Send Invoice via WhatsApp",
   "orderDetail.lineItems": "Line items",
   "orderDetail.addLine": "Add line",
   "orderDetail.noLines": "No lines. Add products from your inventory.",
@@ -593,6 +594,7 @@ const ar: Dict = {
 
   "orderDetail.back": "العودة للطلبات",
   "orderDetail.sendInvoice": "إرسال الفاتورة",
+  "orderDetail.sendInvoiceWa": "إرسال الفاتورة عبر الواتساب",
   "orderDetail.lineItems": "بنود الطلب",
   "orderDetail.addLine": "إضافة بند",
   "orderDetail.noLines": "لا توجد بنود. أضف منتجات من مخزونك.",
