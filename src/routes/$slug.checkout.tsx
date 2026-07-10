@@ -144,19 +144,6 @@ function Checkout() {
       } as any);
       if (error) throw error;
       const orderId = (data as any)?.order_id;
-      if (orderId && form.email.trim()) {
-        supabase.functions
-          .invoke("send-order-confirmation", {
-            body: {
-              orderId,
-              customerEmail: form.email.trim(),
-              lang,
-            },
-          })
-          .then(({ error }) => {
-            if (error) console.error("order confirmation email failed", error);
-          });
-      }
       clearCart();
       toast.success(t("تم استلام طلبك!", "Order placed!"));
       navigate({
