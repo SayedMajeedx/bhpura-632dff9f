@@ -1265,22 +1265,17 @@ function SendInvoiceDialog({ order, totals, settings, currency }: { order: any; 
   });
 
   const [selectedId, setSelectedId] = useState<string>("__default");
-  const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
 
   // Refresh fields from customer + selected template whenever dialog opens or selection/order changes
   useEffect(() => {
     if (!open) return;
-    setEmail(order?.customers?.email ?? "");
     setPhone(order?.customers?.phone ?? "");
     const tpl = templatesQ.data?.find((t) => t.id === selectedId);
-    const rawSubject = tpl?.subject ?? `Invoice #{{invoice_number}} from {{business_name}}`;
     const rawBody = tpl?.body ?? defaultBody();
-    setSubject(renderTemplate(rawSubject, vars).trim());
     setMessage(renderTemplate(rawBody, vars));
-  }, [open, selectedId, templatesQ.data, vars]);
+  }, [open, selectedId, templatesQ.data, vars, order?.customers?.phone]);
 
   // Auto-pick default template once loaded
   useEffect(() => {
@@ -1289,11 +1284,6 @@ function SendInvoiceDialog({ order, totals, settings, currency }: { order: any; 
     if (def) setSelectedId(def.id);
   }, [templatesQ.data, selectedId]);
 
-  const openEmail = () => {
-    if (!email) return toast.error("This customer has no email on file — add it in Customers or type one here");
-    const href = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`;
-    window.location.href = href;
-  };
 
   const openWhatsApp = () => {
     const digits = (phone || "").replace(/[^\d]/g, "");
