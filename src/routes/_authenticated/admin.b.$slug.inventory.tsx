@@ -1,17 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { Plus, Pencil, Trash2, Package, TrendingUp, Wand as Wand2, Printer, Sparkles, Loader2 } from "lucide-react";
-import { useServerFn } from "@tanstack/react-start";
-import { translateProductText } from "@/lib/translate.functions";
+import { Plus, Pencil, Trash2, Package, TrendingUp, Wand as Wand2, Printer } from "lucide-react";
 import { toast } from "sonner";
 import { formatMoney } from "@/lib/format";
 import { useT, useI18n } from "@/lib/i18n";
@@ -22,6 +19,10 @@ import { useBrand } from "@/lib/brand-context";
 import { useRealtimeInvalidate } from "@/hooks/use-realtime-invalidate";
 import { Switch } from "@/components/ui/switch";
 import { ImageCropperDialog } from "@/components/image-cropper-dialog";
+import { BilingualField } from "@/components/bilingual-field";
+
+/** Common measurement units the admin can pick from for a "size" variant. */
+const SIZE_UNITS = ["", "cm", "mm", "m", "inch", "ft", "kg", "g", "ml", "l"] as const;
 
 export const Route = createFileRoute("/_authenticated/admin/b/$slug/inventory")({
   component: Inventory,
@@ -54,6 +55,7 @@ type Variant = {
   id: string; product_id: string; sku: string | null; size: string | null; color: string | null; fabric: string | null;
   cost_price: number; selling_price: number; stock: number;
   stock_main: number; stock_incubator: number; barcode: string | null;
+  size_unit: string | null;
 };
 type Customization = { id: string; name: string; price_delta: number };
 
@@ -289,10 +291,6 @@ function ProductDialog({ product, onSaved }: { product: Product | null; onSaved:
   const [uploading, setUploading] = useState(false);
   const [cropSrc, setCropSrc] = useState<string | null>(null);
   const [pendingVideo, setPendingVideo] = useState<File | null>(null);
-  const [translatingName, setTranslatingName] = useState<"ar->en" | "en->ar" | null>(null);
-  const [translatingDesc, setTranslatingDesc] = useState<"ar->en" | "en->ar" | null>(null);
-  const translate = useServerFn(translateProductText);
-  const mediaInput = useState<HTMLInputElement | null>(null);
 
   // Re-sync form whenever the edited product changes (or the dialog is reopened
   // with a different product) so previously-saved values are preserved as defaults
@@ -361,41 +359,6 @@ function ProductDialog({ product, onSaved }: { product: Product | null; onSaved:
     setCropSrc(null);
   };
 
-  const runTranslate = async (
-    field: "name" | "description",
-    direction: "ar->en" | "en->ar",
-  ) => {
-    const from = direction === "ar->en" ? "ar" : "en";
-    const to = direction === "ar->en" ? "en" : "ar";
-    const source = field === "name"
-      ? (from === "ar" ? form.name_ar : form.name_en)
-      : (from === "ar" ? form.description_ar : form.description_en);
-    if (!source.trim()) {
-      toast.error(isAr ? "اكتب النص أولاً" : "Type the text first");
-      return;
-    }
-    const setBusy = field === "name" ? setTranslatingName : setTranslatingDesc;
-    setBusy(direction);
-    try {
-      const { text } = await translate({ data: { text: source, from, to } });
-      const cleaned = text.trim();
-      if (!cleaned) throw new Error(isAr ? "لم يتم استلام ترجمة" : "No translation returned");
-      setForm((f) => {
-        if (field === "name") {
-          return to === "en" ? { ...f, name_en: cleaned } : { ...f, name_ar: cleaned };
-        }
-        return to === "en" ? { ...f, description_en: cleaned } : { ...f, description_ar: cleaned };
-      });
-      toast.success(isAr ? "تمت الترجمة" : "Translated");
-    } catch (e: any) {
-      const msg = String(e?.message ?? e);
-      if (msg.includes("CREDITS_EXHAUSTED")) toast.error(isAr ? "نفدت الأرصدة، يرجى إضافة رصيد" : "AI credits exhausted");
-      else if (msg.includes("RATE_LIMITED")) toast.error(isAr ? "الكثير من الطلبات، حاول بعد قليل" : "Rate limited — try again shortly");
-      else toast.error(isAr ? "تعذر الترجمة" : "Translation failed");
-    } finally {
-      setBusy(null);
-    }
-  };
 
 
   const save = async () => {
@@ -460,11 +423,6 @@ function ProductDialog({ product, onSaved }: { product: Product | null; onSaved:
           valueEn={form.name_en}
           onChangeAr={(v) => setForm({ ...form, name_ar: v })}
           onChangeEn={(v) => setForm({ ...form, name_en: v })}
-          isAr={isAr}
-          translatingArToEn={translatingName === "ar->en"}
-          translatingEnToAr={translatingName === "en->ar"}
-          onTranslateArToEn={() => runTranslate("name", "ar->en")}
-          onTranslateEnToAr={() => runTranslate("name", "en->ar")}
         />
         <div>
           <Label>{t("inventory.category")}</Label>
@@ -499,11 +457,6 @@ function ProductDialog({ product, onSaved }: { product: Product | null; onSaved:
           valueEn={form.description_en}
           onChangeAr={(v) => setForm({ ...form, description_ar: v })}
           onChangeEn={(v) => setForm({ ...form, description_en: v })}
-          isAr={isAr}
-          translatingArToEn={translatingDesc === "ar->en"}
-          translatingEnToAr={translatingDesc === "en->ar"}
-          onTranslateArToEn={() => runTranslate("description", "ar->en")}
-          onTranslateEnToAr={() => runTranslate("description", "en->ar")}
         />
 
         <div className="flex items-center justify-between rounded-md border border-border p-3">
@@ -605,9 +558,9 @@ function ProductDialog({ product, onSaved }: { product: Product | null; onSaved:
               </div>
               {f.type === "select" && (
                 <Input
-                  placeholder={isAr ? "الخيارات مفصولة بفاصلة (,)" : "Options separated by commas"}
-                  value={(f.options ?? []).join(", ")}
-                  onChange={(e) => upd({ options: e.target.value.split(",").map((s) => s.trim()).filter(Boolean) })}
+                  placeholder={isAr ? "الخيارات مفصولة بفاصلة (,) أو (،)" : "Options separated by commas"}
+                  defaultValue={(f.options ?? []).join(", ")}
+                  onChange={(e) => upd({ options: e.target.value.split(/[,،]/).map((s) => s.trim()).filter(Boolean) })}
                 />
               )}
               <div className="flex items-center justify-between">
@@ -635,7 +588,7 @@ function VariantList({ productId, productName, businessName, variants, onChanged
   const { canViewFinancials } = useProfile();
   const [adding, setAdding] = useState(false);
   const empty = {
-    size: "", color: "", fabric: "", sku: "", barcode: "",
+    size: "", size_unit: "", color: "", fabric: "", sku: "", barcode: "",
     cost_price: "0", selling_price: "0",
     stock_main: "0", stock_incubator: "0",
   };
@@ -651,7 +604,8 @@ function VariantList({ productId, productName, businessName, variants, onChanged
     if (!user) return;
     const { error } = await (supabase.from("product_variants") as any).insert({
       user_id: user.id, product_id: productId,
-      size: row.size || null, color: row.color || null, fabric: row.fabric || null,
+      size: row.size || null, size_unit: row.size_unit || null,
+      color: row.color || null, fabric: row.fabric || null,
       sku: row.sku || null, barcode: row.barcode.trim() || null,
       cost_price: Number(row.cost_price), selling_price: Number(row.selling_price),
       stock_main: Number(row.stock_main), stock_incubator: Number(row.stock_incubator),
@@ -699,7 +653,21 @@ function VariantList({ productId, productName, businessName, variants, onChanged
               const margin = v.selling_price > 0 ? ((v.selling_price - v.cost_price) / v.selling_price) * 100 : 0;
               return (
                 <tr key={v.id} className="border-t border-border">
-                  <td className="py-2 pe-3 text-start"><input className="bg-transparent w-16 outline-none text-start" defaultValue={v.size ?? ""} onBlur={(e) => update(v, { size: e.target.value || null })} /></td>
+                  <td className="py-2 pe-3 text-start">
+                    <div className="inline-flex items-center gap-1">
+                      <input className="bg-transparent w-16 outline-none text-start" defaultValue={v.size ?? ""} onBlur={(e) => update(v, { size: e.target.value || null })} />
+                      <select
+                        className="h-7 rounded border border-input bg-background px-1 text-xs"
+                        defaultValue={v.size_unit ?? ""}
+                        onChange={(e) => update(v, { size_unit: e.target.value || null })}
+                        title={isAr ? "الوحدة (اختياري)" : "Unit (optional)"}
+                      >
+                        {SIZE_UNITS.map((u) => (
+                          <option key={u} value={u}>{u === "" ? (isAr ? "بدون" : "—") : u}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </td>
                   <td className="py-2 pe-3 text-start"><input className="bg-transparent w-20 outline-none text-start" defaultValue={v.color ?? ""} onBlur={(e) => update(v, { color: e.target.value || null })} /></td>
                   <td className="py-2 pe-3 text-start"><input className="bg-transparent w-20 outline-none text-start" defaultValue={v.fabric ?? ""} onBlur={(e) => update(v, { fabric: e.target.value || null })} /></td>
                   <td className="py-2 pe-3 text-start"><input className="bg-transparent w-24 outline-none text-start" defaultValue={v.sku ?? ""} onBlur={(e) => update(v, { sku: e.target.value || null })} /></td>
@@ -753,7 +721,20 @@ function VariantList({ productId, productName, businessName, variants, onChanged
             })}
             {adding && (
               <tr className="border-t border-border bg-secondary/40">
-                <td className="py-2 pe-3"><Input className="h-8 w-16 text-start" value={row.size} onChange={(e) => setRow({ ...row, size: e.target.value })} /></td>
+                <td className="py-2 pe-3">
+                  <div className="inline-flex items-center gap-1">
+                    <Input className="h-8 w-16 text-start" value={row.size} onChange={(e) => setRow({ ...row, size: e.target.value })} />
+                    <select
+                      className="h-8 rounded border border-input bg-background px-1 text-xs"
+                      value={row.size_unit}
+                      onChange={(e) => setRow({ ...row, size_unit: e.target.value })}
+                    >
+                      {SIZE_UNITS.map((u) => (
+                        <option key={u} value={u}>{u === "" ? (isAr ? "بدون" : "—") : u}</option>
+                      ))}
+                    </select>
+                  </div>
+                </td>
                 <td className="py-2 pe-3"><Input className="h-8 w-20 text-start" value={row.color} onChange={(e) => setRow({ ...row, color: e.target.value })} /></td>
                 <td className="py-2 pe-3"><Input className="h-8 w-20 text-start" value={row.fabric} onChange={(e) => setRow({ ...row, fabric: e.target.value })} /></td>
                 <td className="py-2 pe-3"><Input className="h-8 w-24 text-start" value={row.sku} onChange={(e) => setRow({ ...row, sku: e.target.value })} /></td>
@@ -833,67 +814,3 @@ function CustomizationsSection({ items, onChanged }: { items: Customization[]; o
   );
 }
 
-function BilingualField({
-  labelAr, labelEn, valueAr, valueEn, onChangeAr, onChangeEn, isAr,
-  multiline = false,
-  translatingArToEn, translatingEnToAr,
-  onTranslateArToEn, onTranslateEnToAr,
-}: {
-  labelAr: string;
-  labelEn: string;
-  valueAr: string;
-  valueEn: string;
-  onChangeAr: (v: string) => void;
-  onChangeEn: (v: string) => void;
-  isAr: boolean;
-  multiline?: boolean;
-  translatingArToEn: boolean;
-  translatingEnToAr: boolean;
-  onTranslateArToEn: () => void;
-  onTranslateEnToAr: () => void;
-}) {
-  return (
-    <div className="grid gap-3 sm:grid-cols-2">
-      <div className="space-y-1">
-        <div className="flex items-center justify-between gap-2">
-          <Label className="text-xs">{labelAr}</Label>
-          <button
-            type="button"
-            onClick={onTranslateArToEn}
-            disabled={translatingArToEn || !valueAr.trim()}
-            className="inline-flex items-center gap-1 text-[11px] text-primary hover:underline disabled:opacity-40 disabled:no-underline"
-            title={isAr ? "ترجمة تلقائية إلى الإنجليزية" : "Auto-translate to English"}
-          >
-            {translatingArToEn ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
-            <span>✨ {isAr ? "ترجم → EN" : "Translate → EN"}</span>
-          </button>
-        </div>
-        {multiline ? (
-          <Textarea dir="rtl" value={valueAr} onChange={(e) => onChangeAr(e.target.value)} className="text-right" rows={3} />
-        ) : (
-          <Input dir="rtl" value={valueAr} onChange={(e) => onChangeAr(e.target.value)} className="text-right" />
-        )}
-      </div>
-      <div className="space-y-1">
-        <div className="flex items-center justify-between gap-2">
-          <Label className="text-xs">{labelEn}</Label>
-          <button
-            type="button"
-            onClick={onTranslateEnToAr}
-            disabled={translatingEnToAr || !valueEn.trim()}
-            className="inline-flex items-center gap-1 text-[11px] text-primary hover:underline disabled:opacity-40 disabled:no-underline"
-            title={isAr ? "ترجمة تلقائية إلى العربية" : "Auto-translate to Arabic"}
-          >
-            {translatingEnToAr ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
-            <span>✨ {isAr ? "ترجم → AR" : "Translate → AR"}</span>
-          </button>
-        </div>
-        {multiline ? (
-          <Textarea dir="ltr" value={valueEn} onChange={(e) => onChangeEn(e.target.value)} rows={3} />
-        ) : (
-          <Input dir="ltr" value={valueEn} onChange={(e) => onChangeEn(e.target.value)} />
-        )}
-      </div>
-    </div>
-  );
-}

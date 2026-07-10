@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState, useMemo, useRef } from "react";
+import { formatSizeWithUnit } from "@/components/bilingual-field";
 import { ChevronLeft, ChevronRight, ShoppingBag, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 
@@ -16,6 +17,7 @@ export const Route = createFileRoute("/$slug/product/$id")({
 type Variant = {
   id: string;
   size: string | null;
+  size_unit: string | null;
   color: string | null;
   fabric: string | null;
   selling_price: number;
@@ -69,7 +71,7 @@ function ProductDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("products")
-        .select("id, name, name_ar, name_en, description, description_ar, description_en, image_url, media, custom_fields, product_variants(id, size, color, fabric, selling_price, stock_main)")
+        .select("id, name, name_ar, name_en, description, description_ar, description_en, image_url, media, custom_fields, product_variants(id, size, size_unit, color, fabric, selling_price, stock_main)")
         .eq("id", id)
         .eq("brand_id", brand.id)
         .eq("is_active", true)
@@ -167,6 +169,13 @@ function ProductDetail() {
     if (err) {
       setErrorMsg(err);
       toast.error(err);
+      scrollToOptions();
+      return;
+    }
+    if (!variant) {
+      const msg = t("يرجى اختيار خيار أولاً", "Please select an option first");
+      setErrorMsg(msg);
+      toast.error(msg);
       scrollToOptions();
       return;
     }
@@ -282,7 +291,7 @@ function ProductDetail() {
               {variants.map((v) => {
                 const oos = v.stock_main <= 0;
                 const active = v.id === variantId;
-                const label = [v.size, v.color, v.fabric].filter(Boolean).join(" · ") || t("متغيّر", "Variant");
+                const label = [formatSizeWithUnit(v.size, v.size_unit, lang), v.color, v.fabric].filter(Boolean).join(" · ") || t("متغيّر", "Variant");
                 const style: React.CSSProperties = active
                   ? { backgroundColor: primary, color: primaryFg, borderColor: primary }
                   : {};
@@ -403,7 +412,7 @@ function ProductDetail() {
         <div className="mx-auto max-w-6xl flex items-center gap-2">
           <div className="min-w-0 flex-1">
             <div className="text-[10px] uppercase tracking-wider text-muted-foreground truncate">
-              {variant ? [variant.size, variant.color, variant.fabric].filter(Boolean).join(" · ") || t("مختار", "Selected") : t("اختر الخيار", "Choose option")}
+              {variant ? [formatSizeWithUnit(variant.size, variant.size_unit, lang), variant.color, variant.fabric].filter(Boolean).join(" · ") || t("مختار", "Selected") : t("اختر الخيار", "Choose option")}
             </div>
             <div className="text-base font-semibold truncate" style={{ color: primary }}>
               {priceLabel}
