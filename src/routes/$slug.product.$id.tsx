@@ -171,6 +171,12 @@ function ProductDetail() {
       toast.error(err);
       scrollToOptions();
       return;
+    if (!variant) {
+      const msg = t("يرجى اختيار خيار أولاً", "Please select an option first");
+      setErrorMsg(msg);
+      toast.error(msg);
+      scrollToOptions();
+      return;
     }
     setErrorMsg(null);
     const custom = customFields
