@@ -290,10 +290,6 @@ function ProductDialog({ product, onSaved }: { product: Product | null; onSaved:
   const [uploading, setUploading] = useState(false);
   const [cropSrc, setCropSrc] = useState<string | null>(null);
   const [pendingVideo, setPendingVideo] = useState<File | null>(null);
-  const [translatingName, setTranslatingName] = useState<"ar->en" | "en->ar" | null>(null);
-  const [translatingDesc, setTranslatingDesc] = useState<"ar->en" | "en->ar" | null>(null);
-  const translate = useServerFn(translateProductText);
-  const mediaInput = useState<HTMLInputElement | null>(null);
 
   // Re-sync form whenever the edited product changes (or the dialog is reopened
   // with a different product) so previously-saved values are preserved as defaults
@@ -362,41 +358,6 @@ function ProductDialog({ product, onSaved }: { product: Product | null; onSaved:
     setCropSrc(null);
   };
 
-  const runTranslate = async (
-    field: "name" | "description",
-    direction: "ar->en" | "en->ar",
-  ) => {
-    const from = direction === "ar->en" ? "ar" : "en";
-    const to = direction === "ar->en" ? "en" : "ar";
-    const source = field === "name"
-      ? (from === "ar" ? form.name_ar : form.name_en)
-      : (from === "ar" ? form.description_ar : form.description_en);
-    if (!source.trim()) {
-      toast.error(isAr ? "اكتب النص أولاً" : "Type the text first");
-      return;
-    }
-    const setBusy = field === "name" ? setTranslatingName : setTranslatingDesc;
-    setBusy(direction);
-    try {
-      const { text } = await translate({ data: { text: source, from, to } });
-      const cleaned = text.trim();
-      if (!cleaned) throw new Error(isAr ? "لم يتم استلام ترجمة" : "No translation returned");
-      setForm((f) => {
-        if (field === "name") {
-          return to === "en" ? { ...f, name_en: cleaned } : { ...f, name_ar: cleaned };
-        }
-        return to === "en" ? { ...f, description_en: cleaned } : { ...f, description_ar: cleaned };
-      });
-      toast.success(isAr ? "تمت الترجمة" : "Translated");
-    } catch (e: any) {
-      const msg = String(e?.message ?? e);
-      if (msg.includes("CREDITS_EXHAUSTED")) toast.error(isAr ? "نفدت الأرصدة، يرجى إضافة رصيد" : "AI credits exhausted");
-      else if (msg.includes("RATE_LIMITED")) toast.error(isAr ? "الكثير من الطلبات، حاول بعد قليل" : "Rate limited — try again shortly");
-      else toast.error(isAr ? "تعذر الترجمة" : "Translation failed");
-    } finally {
-      setBusy(null);
-    }
-  };
 
 
   const save = async () => {
