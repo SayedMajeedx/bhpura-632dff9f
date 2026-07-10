@@ -1,17 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { Plus, Pencil, Trash2, Package, TrendingUp, Wand as Wand2, Printer, Sparkles, Loader2 } from "lucide-react";
-import { useServerFn } from "@tanstack/react-start";
-import { translateProductText } from "@/lib/translate.functions";
+import { Plus, Pencil, Trash2, Package, TrendingUp, Wand as Wand2, Printer } from "lucide-react";
 import { toast } from "sonner";
 import { formatMoney } from "@/lib/format";
 import { useT, useI18n } from "@/lib/i18n";
@@ -22,6 +19,10 @@ import { useBrand } from "@/lib/brand-context";
 import { useRealtimeInvalidate } from "@/hooks/use-realtime-invalidate";
 import { Switch } from "@/components/ui/switch";
 import { ImageCropperDialog } from "@/components/image-cropper-dialog";
+import { BilingualField } from "@/components/bilingual-field";
+
+/** Common measurement units the admin can pick from for a "size" variant. */
+const SIZE_UNITS = ["", "cm", "mm", "m", "inch", "ft", "kg", "g", "ml", "l"] as const;
 
 export const Route = createFileRoute("/_authenticated/admin/b/$slug/inventory")({
   component: Inventory,
