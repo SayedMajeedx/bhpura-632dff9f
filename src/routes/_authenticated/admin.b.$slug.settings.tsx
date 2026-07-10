@@ -298,8 +298,11 @@ function Settings() {
 
         <ShippingSettingsCard brandId={brandId} />
         <PaymentSettingsCard brandId={brandId} />
+        <BranchesCard brandId={brandId} />
         <BrandHeroCard brandId={brandId} />
         <StorefrontCustomizerCard brandId={brandId} />
+        <EmailSettingsCard brandId={brandId} />
+
 
 
         <div className="flex justify-end"><Button onClick={save}>{t("settings.save")}</Button></div>
