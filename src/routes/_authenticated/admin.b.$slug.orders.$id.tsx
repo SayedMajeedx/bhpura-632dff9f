@@ -780,6 +780,31 @@ function OrderDetail() {
                   </div>
                 )}
 
+                {(it.selected_variant || (it.custom_field_values && it.custom_field_values.length > 0)) && (
+                  <div className="rounded-md border border-border bg-muted/40 p-3 text-xs space-y-1">
+                    <div className="font-medium text-sm">
+                      {isAr ? "اختيارات العميل" : "Customer selections"}
+                    </div>
+                    {it.selected_variant && (
+                      <div className="flex flex-wrap gap-x-3 gap-y-1">
+                        {it.selected_variant.size && <span><b>{isAr ? "المقاس" : "Size"}:</b> {it.selected_variant.size}</span>}
+                        {it.selected_variant.color && <span><b>{isAr ? "اللون" : "Color"}:</b> {it.selected_variant.color}</span>}
+                        {it.selected_variant.fabric && <span><b>{isAr ? "القماش" : "Fabric"}:</b> {it.selected_variant.fabric}</span>}
+                      </div>
+                    )}
+                    {it.custom_field_values && it.custom_field_values.length > 0 && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-0.5 pt-1">
+                        {it.custom_field_values.map((cf, i) => (
+                          <div key={i}>
+                            <b>{isAr ? (cf.label_ar || cf.label_en || cf.key) : (cf.label_en || cf.label_ar || cf.key)}:</b> {cf.value}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+
                 <div>
                   <Label className="text-xs">{t("orderDetail.customizations")}</Label>
                   <div className="flex flex-wrap gap-2 mt-1">
