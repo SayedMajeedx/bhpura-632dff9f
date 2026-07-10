@@ -653,7 +653,21 @@ function VariantList({ productId, productName, businessName, variants, onChanged
               const margin = v.selling_price > 0 ? ((v.selling_price - v.cost_price) / v.selling_price) * 100 : 0;
               return (
                 <tr key={v.id} className="border-t border-border">
-                  <td className="py-2 pe-3 text-start"><input className="bg-transparent w-16 outline-none text-start" defaultValue={v.size ?? ""} onBlur={(e) => update(v, { size: e.target.value || null })} /></td>
+                  <td className="py-2 pe-3 text-start">
+                    <div className="inline-flex items-center gap-1">
+                      <input className="bg-transparent w-16 outline-none text-start" defaultValue={v.size ?? ""} onBlur={(e) => update(v, { size: e.target.value || null })} />
+                      <select
+                        className="h-7 rounded border border-input bg-background px-1 text-xs"
+                        defaultValue={v.size_unit ?? ""}
+                        onChange={(e) => update(v, { size_unit: e.target.value || null })}
+                        title={isAr ? "الوحدة (اختياري)" : "Unit (optional)"}
+                      >
+                        {SIZE_UNITS.map((u) => (
+                          <option key={u} value={u}>{u === "" ? (isAr ? "بدون" : "—") : u}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </td>
                   <td className="py-2 pe-3 text-start"><input className="bg-transparent w-20 outline-none text-start" defaultValue={v.color ?? ""} onBlur={(e) => update(v, { color: e.target.value || null })} /></td>
                   <td className="py-2 pe-3 text-start"><input className="bg-transparent w-20 outline-none text-start" defaultValue={v.fabric ?? ""} onBlur={(e) => update(v, { fabric: e.target.value || null })} /></td>
                   <td className="py-2 pe-3 text-start"><input className="bg-transparent w-24 outline-none text-start" defaultValue={v.sku ?? ""} onBlur={(e) => update(v, { sku: e.target.value || null })} /></td>
