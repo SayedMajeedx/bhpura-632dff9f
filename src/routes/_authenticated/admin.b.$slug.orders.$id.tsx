@@ -156,6 +156,8 @@ function OrderDetail() {
         customization_total: Number(i.customization_total),
         line_total: Number(i.line_total),
         location: (i.location === "incubator" ? "incubator" : "main") as "main" | "incubator",
+        selected_variant: i.selected_variant ?? null,
+        custom_field_values: Array.isArray(i.custom_field_values) ? i.custom_field_values : [],
       })));
     }
   }, [orderQ.data]);
