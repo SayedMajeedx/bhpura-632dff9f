@@ -405,7 +405,7 @@ function ProductDetail() {
         <div className="mx-auto max-w-6xl flex items-center gap-2">
           <div className="min-w-0 flex-1">
             <div className="text-[10px] uppercase tracking-wider text-muted-foreground truncate">
-              {variant ? [variant.size, variant.color, variant.fabric].filter(Boolean).join(" · ") || t("مختار", "Selected") : t("اختر الخيار", "Choose option")}
+              {variant ? [formatSizeWithUnit(variant.size, variant.size_unit, lang), variant.color, variant.fabric].filter(Boolean).join(" · ") || t("مختار", "Selected") : t("اختر الخيار", "Choose option")}
             </div>
             <div className="text-base font-semibold truncate" style={{ color: primary }}>
               {priceLabel}
