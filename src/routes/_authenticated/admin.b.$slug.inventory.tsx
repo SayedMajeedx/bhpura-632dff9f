@@ -557,6 +557,70 @@ function ProductDialog({ product, onSaved }: { product: Product | null; onSaved:
         onConfirm={handleCropConfirmed}
       />
       {pendingVideo && null}
+
+      <div className="rounded-lg border border-border p-3 space-y-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-sm font-medium">{isAr ? "حقول مخصّصة للمنتج" : "Custom product fields"}</div>
+            <div className="text-xs text-muted-foreground">
+              {isAr ? "أضف حتى 5 حقول (نص/رقم/قائمة) يظهرون للعميل في صفحة المنتج." : "Add up to 5 fields (text/number/select) that appear to customers on the product page."}
+            </div>
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={(form.custom_fields ?? []).length >= 5}
+            onClick={() => setForm({
+              ...form,
+              custom_fields: [
+                ...(form.custom_fields ?? []),
+                { key: `f${Date.now()}`, label_ar: "", label_en: "", type: "text", options: [], required: false },
+              ],
+            })}
+          >
+            {isAr ? "إضافة حقل" : "Add field"}
+          </Button>
+        </div>
+        {(form.custom_fields ?? []).map((f, i) => {
+          const upd = (patch: Partial<CustomField>) => {
+            const next = [...form.custom_fields];
+            next[i] = { ...next[i], ...patch };
+            setForm({ ...form, custom_fields: next });
+          };
+          const remove = () => setForm({ ...form, custom_fields: form.custom_fields.filter((_, j) => j !== i) });
+          return (
+            <div key={f.key} className="rounded-md border border-border p-2 space-y-2">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <Input placeholder={isAr ? "التسمية بالعربية" : "Arabic label"} value={f.label_ar ?? ""} onChange={(e) => upd({ label_ar: e.target.value })} />
+                <Input placeholder={isAr ? "التسمية بالإنجليزية" : "English label"} value={f.label_en ?? ""} onChange={(e) => upd({ label_en: e.target.value })} />
+                <Select value={f.type} onValueChange={(v) => upd({ type: v as CustomField["type"] })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="text">{isAr ? "نص" : "Text"}</SelectItem>
+                    <SelectItem value="number">{isAr ? "رقم" : "Number"}</SelectItem>
+                    <SelectItem value="select">{isAr ? "قائمة اختيار" : "Dropdown"}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {f.type === "select" && (
+                <Input
+                  placeholder={isAr ? "الخيارات مفصولة بفاصلة (,)" : "Options separated by commas"}
+                  value={(f.options ?? []).join(", ")}
+                  onChange={(e) => upd({ options: e.target.value.split(",").map((s) => s.trim()).filter(Boolean) })}
+                />
+              )}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-xs">
+                  <Switch checked={!!f.required} onCheckedChange={(v) => upd({ required: v })} />
+                  <span>{isAr ? "إلزامي" : "Required"}</span>
+                </div>
+                <Button size="sm" variant="ghost" onClick={remove}>{isAr ? "حذف" : "Remove"}</Button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
       <DialogFooter><Button onClick={save}>{t("common.save")}</Button></DialogFooter>
     </DialogContent>
   );
