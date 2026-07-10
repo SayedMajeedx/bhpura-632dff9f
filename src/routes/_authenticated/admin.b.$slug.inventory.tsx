@@ -422,11 +422,6 @@ function ProductDialog({ product, onSaved }: { product: Product | null; onSaved:
           valueEn={form.name_en}
           onChangeAr={(v) => setForm({ ...form, name_ar: v })}
           onChangeEn={(v) => setForm({ ...form, name_en: v })}
-          isAr={isAr}
-          translatingArToEn={translatingName === "ar->en"}
-          translatingEnToAr={translatingName === "en->ar"}
-          onTranslateArToEn={() => runTranslate("name", "ar->en")}
-          onTranslateEnToAr={() => runTranslate("name", "en->ar")}
         />
         <div>
           <Label>{t("inventory.category")}</Label>
@@ -461,11 +456,6 @@ function ProductDialog({ product, onSaved }: { product: Product | null; onSaved:
           valueEn={form.description_en}
           onChangeAr={(v) => setForm({ ...form, description_ar: v })}
           onChangeEn={(v) => setForm({ ...form, description_en: v })}
-          isAr={isAr}
-          translatingArToEn={translatingDesc === "ar->en"}
-          translatingEnToAr={translatingDesc === "en->ar"}
-          onTranslateArToEn={() => runTranslate("description", "ar->en")}
-          onTranslateEnToAr={() => runTranslate("description", "en->ar")}
         />
 
         <div className="flex items-center justify-between rounded-md border border-border p-3">
