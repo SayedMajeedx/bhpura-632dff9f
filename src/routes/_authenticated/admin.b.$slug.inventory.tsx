@@ -27,6 +27,14 @@ export const Route = createFileRoute("/_authenticated/admin/b/$slug/inventory")(
 });
 
 type MediaItem = { type: "image" | "video"; url: string };
+type CustomField = {
+  key: string;
+  label_ar: string | null;
+  label_en: string | null;
+  type: "text" | "number" | "select";
+  options?: string[];
+  required?: boolean;
+};
 type Product = {
   id: string;
   name: string;
@@ -39,6 +47,7 @@ type Product = {
   image_url: string | null;
   is_active: boolean;
   media: MediaItem[];
+  custom_fields: CustomField[] | null;
 };
 type Variant = {
   id: string; product_id: string; sku: string | null; size: string | null; color: string | null; fabric: string | null;
