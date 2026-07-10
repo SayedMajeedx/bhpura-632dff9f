@@ -275,6 +275,41 @@ function Checkout() {
           </Card>
         )}
 
+        {fulfillment === "pickup" && (
+          <Card className="p-5 space-y-3">
+            <h2 className="font-display text-xl">{t("اختر الفرع", "Choose branch")}</h2>
+            {branches.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                {t("لا توجد فروع متاحة حاليًا.", "No branches available right now.")}
+              </p>
+            ) : (
+              <div className="grid gap-2">
+                {branches.map((b) => {
+                  const active = branchId === b.id;
+                  return (
+                    <button
+                      key={b.id}
+                      type="button"
+                      onClick={() => setBranchId(b.id)}
+                      className={`text-start p-3 rounded-lg border ${active ? "border-current" : "border-input"}`}
+                      style={active ? { borderColor: settings.primary_color, backgroundColor: `${settings.primary_color}11` } : undefined}
+                    >
+                      <div className="font-medium">{branchLabel(b)}</div>
+                      {branchLoc(b) && <div className="text-xs text-muted-foreground">{branchLoc(b)}</div>}
+                      {(lang === "ar" ? b.notes_ar : b.notes_en) && (
+                        <div className="text-xs text-muted-foreground mt-1">
+                          {lang === "ar" ? b.notes_ar : b.notes_en}
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </Card>
+        )}
+
+
         {fulfillment === "delivery" && (
           <Card className="p-5 space-y-4">
             <h2 className="font-display text-xl">{t("عنوان التوصيل", "Delivery address")}</h2>
