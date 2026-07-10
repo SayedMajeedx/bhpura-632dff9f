@@ -557,9 +557,9 @@ function ProductDialog({ product, onSaved }: { product: Product | null; onSaved:
               </div>
               {f.type === "select" && (
                 <Input
-                  placeholder={isAr ? "الخيارات مفصولة بفاصلة (,)" : "Options separated by commas"}
-                  value={(f.options ?? []).join(", ")}
-                  onChange={(e) => upd({ options: e.target.value.split(",").map((s) => s.trim()).filter(Boolean) })}
+                  placeholder={isAr ? "الخيارات مفصولة بفاصلة (,) أو (،)" : "Options separated by commas"}
+                  defaultValue={(f.options ?? []).join(", ")}
+                  onChange={(e) => upd({ options: e.target.value.split(/[,،]/).map((s) => s.trim()).filter(Boolean) })}
                 />
               )}
               <div className="flex items-center justify-between">
