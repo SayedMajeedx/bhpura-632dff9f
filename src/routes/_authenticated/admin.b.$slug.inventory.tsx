@@ -588,7 +588,7 @@ function VariantList({ productId, productName, businessName, variants, onChanged
   const { canViewFinancials } = useProfile();
   const [adding, setAdding] = useState(false);
   const empty = {
-    size: "", color: "", fabric: "", sku: "", barcode: "",
+    size: "", size_unit: "", color: "", fabric: "", sku: "", barcode: "",
     cost_price: "0", selling_price: "0",
     stock_main: "0", stock_incubator: "0",
   };
@@ -604,7 +604,8 @@ function VariantList({ productId, productName, businessName, variants, onChanged
     if (!user) return;
     const { error } = await (supabase.from("product_variants") as any).insert({
       user_id: user.id, product_id: productId,
-      size: row.size || null, color: row.color || null, fabric: row.fabric || null,
+      size: row.size || null, size_unit: row.size_unit || null,
+      color: row.color || null, fabric: row.fabric || null,
       sku: row.sku || null, barcode: row.barcode.trim() || null,
       cost_price: Number(row.cost_price), selling_price: Number(row.selling_price),
       stock_main: Number(row.stock_main), stock_incubator: Number(row.stock_incubator),
