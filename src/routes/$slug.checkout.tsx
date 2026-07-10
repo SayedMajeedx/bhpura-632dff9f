@@ -141,6 +141,10 @@ function Checkout() {
       toast.error(t("اختر طريقة دفع", "Choose a payment method"));
       return;
     }
+    if (fulfillment === "pickup" && branches.length > 0 && !branchId) {
+      toast.error(t("اختر الفرع", "Select a branch"));
+      return;
+    }
     setSubmitting(true);
     try {
       const { data, error } = await supabase.rpc("place_storefront_order", {
@@ -156,10 +160,20 @@ function Checkout() {
           house: form.house,
           flat: form.flat,
         },
-        p_items: cart.map((c) => ({ variant_id: c.variant_id, quantity: c.qty })),
+        p_items: cart.map((c) => ({
+          variant_id: c.variant_id,
+          quantity: c.qty,
+          selected_variant: {
+            size: c.size,
+            color: c.color,
+            fabric: c.fabric ?? null,
+          },
+          custom_field_values: c.custom_fields ?? [],
+        })),
         p_payment_method: method,
         p_notes: form.notes || undefined,
         p_fulfillment: fulfillment,
+        p_branch_id: fulfillment === "pickup" ? (branchId || null) : null,
       } as any);
       if (error) throw error;
       const orderId = (data as any)?.order_id;
