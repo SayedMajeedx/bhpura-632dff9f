@@ -1218,6 +1218,52 @@ function InvoicePreview({ order, items, settings, shippingAddress, paymentBadge 
 
 type Tpl = { id: string; name: string; channel: "email" | "whatsapp" | "both"; subject: string | null; body: string; is_default: boolean };
 
+function ResendConfirmationEmailButton({ order, lang, onDone }: { order: any; lang: "ar" | "en"; onDone: () => void }) {
+  const [sending, setSending] = useState(false);
+  const status: string = order?.confirmation_email_status ?? "pending";
+  const sentAt = order?.confirmation_email_sent_at as string | null | undefined;
+  const err = order?.confirmation_email_error as string | null | undefined;
+
+  const color =
+    status === "sent" ? "text-green-600"
+    : status === "failed" ? "text-destructive"
+    : "text-muted-foreground";
+
+  const label = lang === "ar"
+    ? (status === "sent" ? "إعادة إرسال البريد" : status === "failed" ? "إعادة المحاولة" : "إرسال بريد التأكيد")
+    : (status === "sent" ? "Resend confirmation email" : status === "failed" ? "Retry confirmation email" : "Send confirmation email");
+
+  const title = err ? `${lang === "ar" ? "فشل: " : "Failed: "}${err}` : sentAt ? `${lang === "ar" ? "أُرسل: " : "Sent: "}${new Date(sentAt).toLocaleString()}` : undefined;
+
+  const onClick = async () => {
+    if (!order?.id) return;
+    setSending(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-order-email", {
+        body: { order_id: order.id, lang },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error(String((data as any).error));
+      toast.success(lang === "ar" ? "تم إرسال بريد التأكيد" : "Confirmation email sent");
+    } catch (e: any) {
+      toast.error(e?.message ?? (lang === "ar" ? "فشل الإرسال" : "Failed to send"));
+    } finally {
+      setSending(false);
+      onDone();
+    }
+  };
+
+  return (
+    <Button variant="outline" onClick={onClick} disabled={sending} title={title}>
+      {sending
+        ? <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+        : <Mail className={`h-4 w-4 mr-2 ${color}`} />}
+      {label}
+    </Button>
+  );
+}
+
+
 function renderTemplate(str: string, vars: Record<string, string>) {
   return str.replace(/\{\{\s*(\w+)\s*\}\}/g, (_, k) => vars[k] ?? "");
 }
