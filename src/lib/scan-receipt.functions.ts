@@ -130,7 +130,7 @@ export const scanReceipt = createServerFn({ method: "POST" })
             unit_price: unit,
             line_total: lt,
           };
-        }).filter((i) => i.name)
+        }).filter((i: ScannedLineItem) => i.name)
       : [];
 
     const store = String(p.store_name ?? p.supplier ?? "").trim();
