@@ -1146,6 +1146,21 @@ function InvoicePreview({ order, items, settings, shippingAddress, paymentBadge 
             </div>
           )}
 
+          {(order.fulfillment_method || order.branch_id) && (
+            <div className="mb-6 text-sm" style={{ textAlign: "start" }}>
+              <p className="text-xs uppercase tracking-wider mb-1" style={{ opacity: 0.6 }}>
+                {isRTL ? "طريقة التسليم" : "Fulfillment"}
+              </p>
+              <p>
+                {order.fulfillment_method === "pickup"
+                  ? (isRTL ? "استلام من الفرع" : "Pickup from branch")
+                  : (isRTL ? "توصيل" : "Delivery")}
+                {order.branch_id && <BranchName brandId={brandId} branchId={order.branch_id} isRTL={isRTL} />}
+              </p>
+            </div>
+          )}
+
+
           <div className="pdf-table-wrap -mx-4 sm:mx-0 overflow-x-auto print:overflow-visible print:mx-0">
             <table className="pdf-line-items w-full min-w-[520px] text-sm mb-6">
               <thead>
